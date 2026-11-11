@@ -211,6 +211,7 @@ name = "scarab-config"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -221,6 +222,7 @@ dependencies = [
  "scarab-config-toml",
  "scarab-config-yaml",
  "serde",
+ "serde_json",
  "tempfile",
 ]
 
@@ -364,6 +366,7 @@ dependencies = [
  "serde_json",
  "serde_yaml_ng",
  "sha2",
+ "tempfile",
  "thiserror",
  "toml",
 ]

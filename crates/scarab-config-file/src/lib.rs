@@ -13,6 +13,19 @@
 //! extensionless explicit path parses with the first (preferred)
 //! format — the back-compat seam for `--config` pointing at a file
 //! without a suffix.
+//!
+//! [`LayeredFileSource`] is the merge counterpart in the same crate:
+//! instead of first-match it collects one file per search dir plus
+//! the explicit/env file on top, folds them into a
+//! `serde_json::Value` tree (objects merge key-wise, scalars/arrays
+//! replace — see [`scarab_config::merge_value`]), applies flat
+//! dotted-path programmatic overrides, then deserializes into `T`.
+//! Last search dir is the base; first dir wins; the explicit file is
+//! the top file layer.
+
+mod layered;
+
+pub use layered::LayeredFileSource;
 
 use std::path::{Path, PathBuf};
 

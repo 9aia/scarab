@@ -9,14 +9,23 @@
 //!   claims, `parse`/`render` over serde. Impls: `scarab-config-toml`,
 //!   `scarab-config-yaml`.
 //! - [`ConfigSource<T>`] — source-level: `load() -> Result<T, String>`.
-//!   Impls: `scarab-config-file` (discovery + extension dispatch);
-//!   env/remote sources are new impls.
+//!   Impls: `scarab-config-file` (`FileSource` first-match,
+//!   `LayeredFileSource` merge-all lives in `scarab-config-file`).
+//!
+//! [`merge_value`] / [`apply_overrides`] are the pure merge half:
+//! layered sources fold each file into a `serde_json::Value` tree
+//! (objects merge key-wise, scalars/arrays replace) before
+//! deserializing into `T`.
 //!
 //! [`Discovery`] is the shared search spec every file-backed source
 //! uses: explicit path → `$<NAME>_CONFIG` → project dir → user config
 //! dir, earlier formats winning ties (YAML preferred by convention).
 
 use std::path::{Path, PathBuf};
+
+mod merge;
+
+pub use merge::{apply_overrides, merge_value};
 
 /// A config source — returns the loaded config model `T`.
 pub trait ConfigSource<T>: Send + Sync {
