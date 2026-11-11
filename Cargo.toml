@@ -5,6 +5,7 @@ members = [
     "crates/scarab-config-file",
     "crates/scarab-config-toml",
     "crates/scarab-config-yaml",
+    "crates/scarab-testkit",
     "crates/scarab-template",
     "crates/scarab-template-minijinja",
     "crates/tamias-driver-template",
@@ -29,6 +30,7 @@ scarab-config = { path = "crates/scarab-config", version = "0.1.0" }
 scarab-config-file = { path = "crates/scarab-config-file", version = "0.1.0" }
 scarab-config-toml = { path = "crates/scarab-config-toml", version = "0.1.0" }
 scarab-config-yaml = { path = "crates/scarab-config-yaml", version = "0.1.0" }
+scarab-testkit = { path = "crates/scarab-testkit", version = "0.1.0" }
 scarab-template = { path = "crates/scarab-template", version = "0.1.0" }
 scarab-template-minijinja = { path = "crates/scarab-template-minijinja", version = "0.1.0" }
 

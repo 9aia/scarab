@@ -1,0 +1,6 @@
+name: user-base
+port: 1
+tags: [a, b]
+server:
+  host: user-host
+  tls: false

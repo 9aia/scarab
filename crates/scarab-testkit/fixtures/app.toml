@@ -1,0 +1,7 @@
+name = "fixture-app"
+port = 8080
+tags = ["alpha", "beta"]
+
+[server]
+host = "0.0.0.0"
+tls = true

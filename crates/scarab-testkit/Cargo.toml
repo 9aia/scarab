@@ -1,0 +1,25 @@
+[package]
+name = "scarab-testkit"
+description = "Conformance suites + golden fixtures for the scarab config ports — assert_* functions any ConfigFormat/ConfigSource impl runs to prove itself"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+scarab-config.workspace = true
+scarab-config-file.workspace = true
+scarab-template.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+
+[dev-dependencies]
+scarab-config-toml.workspace = true
+scarab-config-yaml.workspace = true
+scarab-template-minijinja.workspace = true

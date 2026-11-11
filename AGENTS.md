@@ -17,6 +17,7 @@ type); `-file`/`-toml`/`-yaml` are the impls.
 | `crates/scarab-config-file` | file-discovery impl — explicit → `$<NAME>_CONFIG` → `./<name>.<ext>` → `~/.config/<name>/`; YAML preferred |
 | `crates/scarab-config-toml` | TOML `ConfigFormat` — serde parse/render |
 | `crates/scarab-config-yaml` | YAML `ConfigFormat` — claims `.yaml`/`.yml` |
+| `crates/scarab-testkit` | conformance suites (`assert_config_format/discovery/source/merge_*`) + golden fixtures for the config ports |
 | `xtask` (`scarab-xtask`) | check / test / coverage / install / package / smoke / site |
 
 ## Boundary

@@ -263,6 +263,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "scarab-testkit"
+version = "0.1.0"
+dependencies = [
+ "scarab-config",
+ "scarab-config-file",
+ "scarab-config-toml",
+ "scarab-config-yaml",
+ "scarab-template",
+ "scarab-template-minijinja",
+ "serde",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "scarab-xtask"
 version = "0.1.0"
 
