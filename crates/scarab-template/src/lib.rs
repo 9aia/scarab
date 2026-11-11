@@ -22,6 +22,15 @@
 //! result at `into` (relative to the target dir — `--target`,
 //! `$TEMPLATE_TARGET`, or the caller's cwd). `uninstall` removes
 //! files still matching the recorded digests.
+//!
+//! **Composition (`template.extends`).** A pack may name a parent
+//! pack by tamias ref. Resolution is tamias-side — the driver cannot
+//! fetch refs — so `tamias install` materializes each parent's
+//! payload inside the child payload at `.scarab-parent/` (a parent
+//! that itself extends nests as `.scarab-parent/.scarab-parent/`,
+//! and so on). The driver renders the chain ancestor-first: parent
+//! `template.vars` are the lowest-precedence defaults, and on `into`
+//! conflicts the *child* wins (it renders last).
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -44,10 +53,20 @@ pub struct TemplateFile {
 pub struct PackTemplate {
     /// Files to render, in order.
     pub files: Vec<TemplateFile>,
-    /// Variable defaults — lowest-precedence context layer.
-    /// Values are arbitrary JSON (strings, numbers, bools, lists,
-    /// tables); templates see them as engine-native values.
+    /// Variable defaults — lowest-precedence context layer *within
+    /// this pack*. Values are arbitrary JSON (strings, numbers,
+    /// bools, lists, tables); templates see them as engine-native
+    /// values. Across an `extends` chain, ancestor defaults sit below
+    /// descendant defaults (child wins).
     pub vars: BTreeMap<String, serde_json::Value>,
+    /// `template.extends` — a tamias ref naming a parent template
+    /// pack (`git:org/repo//path`, `cf:…`, a store name, …).
+    ///
+    /// The driver never resolves this itself: tamias materializes the
+    /// parent's payload at `.scarab-parent/` inside this payload
+    /// during install. `None`/absent = no parent. A non-string or
+    /// empty value fails manifest parsing/validation.
+    pub extends: Option<String>,
 }
 
 /// Errors from pack parsing and path safety — render errors are the

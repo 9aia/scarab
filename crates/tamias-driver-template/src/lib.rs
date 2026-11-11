@@ -4,10 +4,10 @@
 //! Verbs (the tamias driver contract — `--dir <payload>
 //! --name <pkg> [--config <vars-file>] [key=value …]`):
 //!
-//! - `install` — validate the pack (manifest parses, every `src`
-//!   exists and compiles, vars resolve) and preview the render
-//!   plan. Writes nothing — the payload dir is the evictable fetch
-//!   cache; rendered output belongs to `deploy`.
+//! - `install` — validate the pack *chain* (each manifest parses,
+//!   every `src` exists and compiles, vars resolve) and preview the
+//!   merged render plan. Writes nothing — the payload dir is the
+//!   evictable fetch cache; rendered output belongs to `deploy`.
 //! - `deploy [--dry-run] [--target <dir>]` — render each
 //!   `template.files[]` entry through the engine and write it at
 //!   `into` under the target dir (`--target` → `$TEMPLATE_TARGET` →
@@ -19,9 +19,27 @@
 //!   `--config` vars file (a flat `name = value` map).
 //! - `capabilities` — `{"types": ["template"], "verbs": […]}`.
 //!
-//! Var context precedence (later wins): pack `template.vars`
-//! defaults → auto vars (`repo`, `user`) → `--config` file →
-//! trailing `key=value` args → `$TEMPLATE_VAR_<NAME>` env.
+//! **Composition (`template.extends`).** A pack may declare
+//! `template.extends: <ref>` naming a parent pack. The driver cannot
+//! fetch refs, so tamias resolves + materializes each ancestor's
+//! payload inside this one at `.scarab-parent/` during install —
+//! recursively, so a grandparent lands at
+//! `.scarab-parent/.scarab-parent/`. The chain renders
+//! ancestor-first: parent files write first, the child's last, so on
+//! an `into` conflict the **child wins**; distinct `into`s all
+//! render. `.scarab-parent/` present without `extends` is honored the
+//! same way (a vendored parent); `extends` declared but
+//! `.scarab-parent/` absent is an error — the pack must go through
+//! `tamias install`.
+//!
+//! Var context precedence (later wins): ancestor `template.vars`
+//! defaults → … → this pack's `template.vars` → auto vars (`repo`,
+//! `user`) → `--config` file → `$TEMPLATE_VAR_<NAME>` env →
+//! trailing `key=value` args.
+//!
+//! State stays v1-simple: `.scarab-template-state.json` records one
+//! digest per `into` — a child-overridden file keeps only the final
+//! (child) digest, which is exactly what uninstall needs.
 //!
 //! The engine is minijinja (`scarab-template-minijinja`) —
 //! sandboxed, no filesystem/network access from templates.
@@ -156,6 +174,68 @@ fn load_pack(dir: &Path) -> Result<(PackTemplate, String)> {
     Ok((pack, name))
 }
 
+/// Payload subdir tamias materializes a resolved `template.extends`
+/// parent into — and where this driver looks for it.
+const PARENT_DIR: &str = ".scarab-parent";
+
+/// One pack in an `extends` chain — its parsed `template:` table, its
+/// payload dir (the `into`-relative `src` root), and manifest name.
+#[derive(Debug)]
+struct ChainPack {
+    pack: PackTemplate,
+    dir: PathBuf,
+    name: String,
+}
+
+/// Load the payload's pack plus every materialized ancestor, ordered
+/// **ancestor-first** (grandparent → … → parent → child) so callers
+/// render/apply in precedence order.
+///
+/// The chain is discovered purely on disk: each level's
+/// `.scarab-parent/` holds the next ancestor's payload (already
+/// composed by tamias — a grandparent sits at
+/// `.scarab-parent/.scarab-parent/`). `template.extends` declared but
+/// no `.scarab-parent/` means the payload never went through
+/// `tamias install` — the driver can't fetch refs, so that's an error.
+/// `.scarab-parent/` present without `extends` is honored as a
+/// vendored parent.
+fn load_chain(dir: &Path) -> Result<Vec<ChainPack>> {
+    let mut chain = Vec::new();
+    let mut cur = dir.to_path_buf();
+    loop {
+        let (pack, name) = load_pack(&cur)?;
+        if let Some(extends) = &pack.extends {
+            if extends.trim().is_empty() {
+                return Err(err(format!(
+                    "{}: template.extends is empty — expected a tamias ref",
+                    cur.join("tamias.yaml").display()
+                )));
+            }
+        }
+        let parent = cur.join(PARENT_DIR);
+        if pack.extends.is_some() && !parent.is_dir() {
+            return Err(err(format!(
+                "{}: template.extends is set but {PARENT_DIR}/ is not materialized — \
+                 install through `tamias install` so the parent payload lands inside the package",
+                cur.display()
+            )));
+        }
+        let has_parent = parent.is_dir();
+        chain.push(ChainPack {
+            pack,
+            dir: cur.clone(),
+            name,
+        });
+        if has_parent {
+            cur = parent;
+        } else {
+            break;
+        }
+    }
+    chain.reverse();
+    Ok(chain)
+}
+
 /// Auto vars every pack sees (overridable by later layers).
 fn auto_vars(dir: &Path) -> BTreeMap<String, serde_json::Value> {
     let mut m = BTreeMap::new();
@@ -194,10 +274,13 @@ fn auto_vars(dir: &Path) -> BTreeMap<String, serde_json::Value> {
     m
 }
 
-/// Var layers, later winning: pack `template.vars` defaults →
-/// auto vars (`repo`, `user`) → `--config` file →
-/// `$TEMPLATE_VAR_<NAME>` env → trailing `key=value` args.
-fn resolve_vars(pack: &PackTemplate, a: &Args, work_dir: &Path) -> Result<serde_json::Value> {
+/// Var layers, later winning: ancestor `template.vars` defaults →
+/// … → this pack's `template.vars` → auto vars (`repo`, `user`) →
+/// `--config` file → `$TEMPLATE_VAR_<NAME>` env → trailing
+/// `key=value` args. `chain` is ancestor-first (see [`load_chain`]),
+/// so folding `vars` in order gives child defaults precedence over
+/// parent defaults.
+fn resolve_vars(chain: &[ChainPack], a: &Args, work_dir: &Path) -> Result<serde_json::Value> {
     let mut file_vars = BTreeMap::new();
     if let Some(cfg) = &a.config {
         let text = std::fs::read_to_string(cfg)?;
@@ -239,8 +322,14 @@ fn resolve_vars(pack: &PackTemplate, a: &Args, work_dir: &Path) -> Result<serde_
             serde_json::from_str(v).unwrap_or_else(|_| serde_json::Value::String(v.clone())),
         );
     }
+    let mut pack_vars = BTreeMap::new();
+    for cp in chain {
+        for (k, v) in &cp.pack.vars {
+            pack_vars.insert(k.clone(), v.clone());
+        }
+    }
     Ok(merge_context(
-        &pack.vars,
+        &pack_vars,
         &auto_vars(work_dir),
         &file_vars,
         &args_vars,
@@ -278,6 +367,22 @@ fn render_pack(
     Ok(out)
 }
 
+/// Render the whole `extends` chain against one context — ancestor
+/// packs first, the child last. Duplicate `into`s are kept in order:
+/// writing them sequentially makes the child overwrite the parent,
+/// and the state digest keeps only the final (child) content.
+fn render_chain(
+    chain: &[ChainPack],
+    ctx: &serde_json::Value,
+    engine: &dyn TemplateEngine,
+) -> Result<Vec<(PathBuf, String)>> {
+    let mut out = Vec::new();
+    for cp in chain {
+        out.extend(render_pack(&cp.pack, &cp.dir, ctx, engine)?);
+    }
+    Ok(out)
+}
+
 fn target_dir(a: &Args) -> Result<PathBuf> {
     if let Some(t) = &a.target {
         return Ok(scarab_config_dir_free(t));
@@ -292,23 +397,39 @@ fn scarab_config_dir_free(p: &Path) -> PathBuf {
     scarab_config::expand_tilde(p)
 }
 
-/// `install` — validate the pack end-to-end (manifest, sources,
-/// render with resolved vars) and report the plan. Writes nothing.
+/// `install` — validate the pack chain end-to-end (each manifest,
+/// sources, render with resolved vars) and report the merged plan.
+/// Writes nothing.
 fn install(a: &Args) -> Result<()> {
     let dir = required_dir(a)?;
-    let (pack, name) = load_pack(&dir)?;
+    let chain = load_chain(&dir)?;
+    let child = chain.last().map_or("?", |c| c.name.as_str());
     let engine = MinijinjaEngine::new();
     // Auto vars describe the destination repo, not the pack payload.
     let ctx_dir = target_dir(a)?;
-    let ctx = resolve_vars(&pack, a, &ctx_dir)?;
-    let rendered = render_pack(&pack, &dir, &ctx, &engine)?;
+    let ctx = resolve_vars(&chain, a, &ctx_dir)?;
+    let rendered = render_chain(&chain, &ctx, &engine)?;
     println!(
-        "template: {name} — {} file(s) validated (engine: {})",
+        "template: {child} — {} file(s) validated across {} pack(s) (engine: {})",
         rendered.len(),
+        chain.len(),
         engine.name()
     );
+    if chain.len() > 1 {
+        let names: Vec<&str> = chain.iter().map(|c| c.name.as_str()).collect();
+        println!("  extends chain: {}", names.join(" → "));
+    }
+    let mut seen = std::collections::BTreeSet::new();
+    let mut overridden = 0usize;
     for (into, _) in &rendered {
-        println!("  {}", into.display());
+        if seen.insert(into.clone()) {
+            println!("  {}", into.display());
+        } else {
+            overridden += 1;
+        }
+    }
+    if overridden > 0 {
+        println!("  ({overridden} file(s) overridden by a later pack in the chain)");
     }
     Ok(())
 }
@@ -316,12 +437,15 @@ fn install(a: &Args) -> Result<()> {
 /// `deploy` — render + write into the target dir.
 fn deploy(a: &Args) -> Result<()> {
     let dir = required_dir(a)?;
-    let (pack, name) = load_pack(&dir)?;
+    let chain = load_chain(&dir)?;
+    let name = chain
+        .last()
+        .map_or_else(|| "?".to_string(), |c| c.name.clone());
     let engine = MinijinjaEngine::new();
     let target = target_dir(a)?;
     // Auto vars describe the destination repo, not the pack payload.
-    let ctx = resolve_vars(&pack, a, &target)?;
-    let rendered = render_pack(&pack, &dir, &ctx, &engine)?;
+    let ctx = resolve_vars(&chain, a, &target)?;
+    let rendered = render_chain(&chain, &ctx, &engine)?;
     std::fs::create_dir_all(&target)?;
 
     let mut state = State {
@@ -547,5 +671,160 @@ mod tests {
     fn config_schema_is_valid_json() {
         let v = config_schema();
         assert_eq!(v["type"], "object");
+    }
+
+    /// Write a minimal template pack: `tamias.yaml` + one tmpl file.
+    fn write_pack(dir: &Path, name: &str, vars: &str, files: &str, extends: Option<&str>) {
+        std::fs::create_dir_all(dir).unwrap();
+        let ext = extends.map_or_else(String::new, |e| format!("  extends: {e}\n"));
+        let vars_block = if vars.is_empty() {
+            String::new()
+        } else {
+            format!("  vars:\n{vars}")
+        };
+        std::fs::write(
+            dir.join("tamias.yaml"),
+            format!("name: {name}\ntype: template\ntemplate:\n{vars_block}{ext}  files:\n{files}"),
+        )
+        .unwrap();
+    }
+
+    /// A three-level chain: grandparent → parent (`.scarab-parent`) →
+    /// child. Returns (child payload dir, _tempdirs guard).
+    fn chain_fixture() -> (tempfile::TempDir, PathBuf) {
+        let tmp = tempfile::tempdir().unwrap();
+        let gp = tmp.path().join("gp");
+        write_pack(
+            &gp,
+            "grandparent",
+            "    who: gp\n    shared: gp\n",
+            "    - src: gp.txt.tmpl\n      into: gp.txt\n    - src: shared.txt.tmpl\n      into: shared.txt\n",
+            None,
+        );
+        std::fs::write(gp.join("gp.txt.tmpl"), "gp {{ who }} {{ shared }}").unwrap();
+        std::fs::write(gp.join("shared.txt.tmpl"), "shared=gp").unwrap();
+
+        let parent = tmp.path().join("parent");
+        std::fs::create_dir_all(parent.join(PARENT_DIR)).unwrap();
+        // parent payload = its own files + materialized grandparent
+        let gp_copy = parent.join(PARENT_DIR);
+        for f in ["tamias.yaml", "gp.txt.tmpl", "shared.txt.tmpl"] {
+            std::fs::copy(gp.join(f), gp_copy.join(f)).unwrap();
+        }
+        write_pack(
+            &parent,
+            "parent",
+            "    who: parent\n",
+            "    - src: p.txt.tmpl\n      into: p.txt\n    - src: shared.txt.tmpl\n      into: shared.txt\n",
+            Some("git:org/gp"),
+        );
+        std::fs::write(parent.join("p.txt.tmpl"), "p {{ who }} {{ shared }}").unwrap();
+        std::fs::write(parent.join("shared.txt.tmpl"), "shared=parent").unwrap();
+
+        let child = tmp.path().join("child");
+        std::fs::create_dir_all(child.join(PARENT_DIR)).unwrap();
+        // child payload = its own files + the parent's whole payload
+        // (which already nests the grandparent at .scarab-parent/)
+        copy_dir_all(&parent, &child.join(PARENT_DIR));
+        write_pack(
+            &child,
+            "child",
+            "    shared: child\n",
+            "    - src: c.txt.tmpl\n      into: c.txt\n    - src: shared.txt.tmpl\n      into: shared.txt\n",
+            Some("git:org/parent"),
+        );
+        std::fs::write(child.join("c.txt.tmpl"), "c {{ who }} {{ shared }}").unwrap();
+        std::fs::write(child.join("shared.txt.tmpl"), "shared=child").unwrap();
+        (tmp, child)
+    }
+
+    fn copy_dir_all(src: &Path, dest: &Path) {
+        std::fs::create_dir_all(dest).unwrap();
+        for entry in std::fs::read_dir(src).unwrap() {
+            let entry = entry.unwrap();
+            let to = dest.join(entry.file_name());
+            if entry.file_type().unwrap().is_dir() {
+                copy_dir_all(&entry.path(), &to);
+            } else {
+                std::fs::copy(entry.path(), &to).unwrap();
+            }
+        }
+    }
+
+    #[test]
+    fn load_chain_orders_ancestors_first() {
+        let (_tmp, child) = chain_fixture();
+        let chain = load_chain(&child).unwrap();
+        let names: Vec<&str> = chain.iter().map(|c| c.name.as_str()).collect();
+        assert_eq!(names, ["grandparent", "parent", "child"]);
+        // each pack's src root is its own payload dir
+        assert!(chain[0].dir.ends_with("gp") || chain[0].dir.ends_with(".scarab-parent"));
+        assert!(chain[0].dir.join("gp.txt.tmpl").is_file());
+        assert!(chain[1].dir.join("p.txt.tmpl").is_file());
+        assert!(chain[2].dir.join("c.txt.tmpl").is_file());
+    }
+
+    #[test]
+    fn extends_without_materialized_parent_errors() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_pack(
+            tmp.path(),
+            "orphan",
+            "",
+            "    - src: x.tmpl\n      into: x.txt\n",
+            Some("git:org/missing"),
+        );
+        std::fs::write(tmp.path().join("x.tmpl"), "x").unwrap();
+        let err = load_chain(tmp.path()).unwrap_err().to_string();
+        assert!(err.contains(".scarab-parent"), "{err}");
+    }
+
+    #[test]
+    fn deploy_renders_ancestors_first_child_wins() {
+        let (_tmp, child) = chain_fixture();
+        let target = tempfile::tempdir().unwrap();
+        let a = Args {
+            dir: Some(child),
+            target: Some(target.path().to_path_buf()),
+            ..Args::default()
+        };
+        deploy(&a).unwrap();
+        // child overrode `shared` at every level; `who` resolves to the
+        // child's nearest default — parent sets who=parent, child doesn't
+        assert_eq!(
+            std::fs::read_to_string(target.path().join("shared.txt")).unwrap(),
+            "shared=child"
+        );
+        assert_eq!(
+            std::fs::read_to_string(target.path().join("p.txt")).unwrap(),
+            "p parent child"
+        );
+        assert_eq!(
+            std::fs::read_to_string(target.path().join("gp.txt")).unwrap(),
+            "gp parent child"
+        );
+        assert_eq!(
+            std::fs::read_to_string(target.path().join("c.txt")).unwrap(),
+            "c parent child"
+        );
+        // state recorded the child's final digest for the conflict
+        let state: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(target.path().join(STATE_FILE)).unwrap())
+                .unwrap();
+        assert_eq!(state["pack"], "child");
+        assert!(state["files"]["shared.txt"].is_string());
+    }
+
+    #[test]
+    fn args_beat_pack_vars_across_chain() {
+        let (_tmp, child) = chain_fixture();
+        let a = Args {
+            dir: Some(child.clone()),
+            target: Some(tempfile::tempdir().unwrap().path().to_path_buf()),
+            pairs: vec![("shared".into(), "arg".into())],
+            ..Args::default()
+        };
+        // install previews without writing — just assert it validates
+        install(&a).unwrap();
     }
 }
