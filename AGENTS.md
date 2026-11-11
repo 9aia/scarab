@@ -35,6 +35,7 @@ cargo xtask check          # fmt + clippy -D warnings
 cargo xtask test           # whole suite (nextest if present)
 cargo xtask coverage       # llvm-cov report; extra args pass through
 cargo xtask package        # cargo package --workspace (verify)
+cargo xtask site           # build the docs site (needs docs/ worktree)
 ```
 
 Git hooks live in `.hooks/` (`core.hooksPath` = `.hooks`).
@@ -51,8 +52,11 @@ Git hooks live in `.hooks/` (`core.hooksPath` = `.hooks`).
 
 ## Docs
 
-Design history: org ledger proposal P-017 (supersedes P-015).
-`docs/` worktree (VitePress/Diátaxis) lands with the docs phase.
+`docs/` worktree — VitePress + Diátaxis (getting-started, how-to,
+reference, explanation) → GitHub Pages at `9aia.com/scarab`.
+`cargo xtask site` runs `bun install` + `vitepress build` in the
+worktree. Design history: org ledger proposal P-017 (supersedes
+P-015).
 
 <!-- myco:agent-awareness -->
 

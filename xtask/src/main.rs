@@ -31,6 +31,38 @@ fn have_cargo_sub(sub: &str) -> bool {
         .is_ok_and(|s| s.success())
 }
 
+fn have(prog: &str) -> bool {
+    Command::new(prog)
+        .arg("--version")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .is_ok_and(|s| s.success())
+}
+
+fn run_in(dir: &str, args: &[&str]) -> ExitStatus {
+    let empty: &[&str] = &[];
+    let (prog, rest) = args.split_first().unwrap_or((&"true", empty));
+    Command::new(prog)
+        .args(rest)
+        .current_dir(dir)
+        .status()
+        .unwrap_or_else(|e| {
+            eprintln!("xtask: failed to spawn {prog}: {e}");
+            std::process::exit(1)
+        })
+}
+
+fn site() -> ExitStatus {
+    if !std::path::Path::new("docs/package.json").exists() {
+        eprintln!("no docs/ worktree — `git worktree add --orphan -b docs docs` first");
+        std::process::exit(1);
+    }
+    let pkg = if have("bun") { "bun" } else { "npm" };
+    let _ = run_in("docs", &[pkg, "install"]);
+    run_in("docs", &[pkg, "run", "docs:build"])
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let (verb, rest) = args
@@ -78,10 +110,7 @@ fn main() {
             eprintln!("xtask: smoke not wired yet (needs crates.io publish)");
             std::process::exit(1)
         }
-        "site" => {
-            eprintln!("xtask: site not wired yet (needs docs/ worktree)");
-            std::process::exit(1)
-        }
+        "site" => site(),
         _ => {
             eprintln!("usage: cargo xtask <check|test|coverage|install|package|smoke|site>");
             std::process::exit(2);
