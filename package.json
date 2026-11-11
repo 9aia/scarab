@@ -5,7 +5,7 @@
   "scripts": {
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
-    "docs:deploy": "bun run docs:build && bunx gh-pages -d .vitepress/dist",
+    "docs:deploy": "bun run docs:build && bunx gh-pages -d .vitepress/dist --nojekyll",
     "fmt": "vp fmt",
     "fmt:check": "vp fmt --check",
     "lint": "vp lint",
