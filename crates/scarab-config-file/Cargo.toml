@@ -1,0 +1,20 @@
+[package]
+name = "scarab-config-file"
+description = "File impl of ConfigSource — discovery (explicit → env → project → user dir) + extension dispatch to ConfigFormat impls"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+scarab-config.workspace = true
+scarab-config-toml.workspace = true
+scarab-config-yaml.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

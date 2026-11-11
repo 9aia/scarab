@@ -1,0 +1,60 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/scarab-config",
+    "crates/scarab-config-file",
+    "crates/scarab-config-toml",
+    "crates/scarab-config-yaml",
+    "xtask",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+repository = "https://github.com/9aia/scarab"
+description = "Config & template expertise — generic config loading and templated content packs"
+homepage = "https://9aia.com/scarab"
+authors = ["9aia"]
+keywords = ["config", "template", "cli", "configuration"]
+categories = ["command-line-utilities", "development-tools"]
+readme = "README.md"
+
+[workspace.dependencies]
+scarab-config = { path = "crates/scarab-config", version = "0.1.0" }
+scarab-config-file = { path = "crates/scarab-config-file", version = "0.1.0" }
+scarab-config-toml = { path = "crates/scarab-config-toml", version = "0.1.0" }
+scarab-config-yaml = { path = "crates/scarab-config-yaml", version = "0.1.0" }
+
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml_ng = "0.10"
+toml = "0.8"
+tempfile = "3"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(coverage)"] }
+
+[workspace.lints.clippy]
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+perf = { level = "deny", priority = -1 }
+style = { level = "warn", priority = -1 }
+complexity = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+expect_used = "warn"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+module_name_repetitions = "allow"
+doc_markdown = "allow"
+similar_names = "allow"
+too_many_lines = "allow"
+cast_precision_loss = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+expl_impl_clone_on_copy = "allow"
+cast_lossless = "allow"
+struct_excessive_bools = "allow"
