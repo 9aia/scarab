@@ -1,0 +1,21 @@
+# rust-repo — starter config files for a new 9aia Rust workspace,
+# rendered per-repo by tamias-driver-template (`type: template`).
+# `{{ repo }}` resolves to the target repo's name (git remote
+# basename, else dir name); `{{ channel }}` defaults to "stable".
+name: rust-repo
+version: "0.1.0"
+description: >-
+  rust-toolchain.toml, .cargo/config.toml (xtask alias), and a
+  .config/nextest.toml profile for a fresh 9aia Rust workspace.
+type: template
+
+template:
+  vars:
+    channel: stable
+  files:
+    - src: templates/rust-toolchain.toml.tmpl
+      into: ./rust-toolchain.toml
+    - src: templates/cargo-config.toml.tmpl
+      into: ./.cargo/config.toml
+    - src: templates/nextest.toml.tmpl
+      into: ./.config/nextest.toml

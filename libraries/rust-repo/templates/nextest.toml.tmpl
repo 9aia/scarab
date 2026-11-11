@@ -1,0 +1,7 @@
+[profile.default]
+slow-timeout = { period = "30s", terminate-after = 4 }
+failure-output = "final"
+# A serialized spawned-binaries suite costs real time — a first
+# failure must not cancel the rest and throw away the whole run's
+# signal.
+fail-fast = false

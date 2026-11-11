@@ -298,7 +298,9 @@ fn install(a: &Args) -> Result<()> {
     let dir = required_dir(a)?;
     let (pack, name) = load_pack(&dir)?;
     let engine = MinijinjaEngine::new();
-    let ctx = resolve_vars(&pack, a, &dir)?;
+    // Auto vars describe the destination repo, not the pack payload.
+    let ctx_dir = target_dir(a)?;
+    let ctx = resolve_vars(&pack, a, &ctx_dir)?;
     let rendered = render_pack(&pack, &dir, &ctx, &engine)?;
     println!(
         "template: {name} — {} file(s) validated (engine: {})",
@@ -316,9 +318,10 @@ fn deploy(a: &Args) -> Result<()> {
     let dir = required_dir(a)?;
     let (pack, name) = load_pack(&dir)?;
     let engine = MinijinjaEngine::new();
-    let ctx = resolve_vars(&pack, a, &dir)?;
-    let rendered = render_pack(&pack, &dir, &ctx, &engine)?;
     let target = target_dir(a)?;
+    // Auto vars describe the destination repo, not the pack payload.
+    let ctx = resolve_vars(&pack, a, &target)?;
+    let rendered = render_pack(&pack, &dir, &ctx, &engine)?;
     std::fs::create_dir_all(&target)?;
 
     let mut state = State {

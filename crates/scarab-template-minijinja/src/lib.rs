@@ -27,9 +27,12 @@ impl MinijinjaEngine {
     /// A fresh environment with default settings.
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            env: minijinja::Environment::new(),
-        }
+        let mut env = minijinja::Environment::new();
+        // Config files should keep their trailing newline — the
+        // engine default strips one, which concatenates files on
+        // `cat` and trips POSIX-text linters.
+        env.set_keep_trailing_newline(true);
+        Self { env }
     }
 }
 
