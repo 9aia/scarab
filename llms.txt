@@ -1,0 +1,32 @@
+# scarab
+
+> config & template expertise
+
+generic config loading and templated content packs — the seal that validates what runs
+
+## Table of Contents
+
+### Getting Started
+
+- [Getting started](/scarab/getting-started.md)
+
+### How-to
+
+- [How-to guides](/scarab/how-to.md)
+- [Customize config discovery](/scarab/how-to/customize-config-discovery.md)
+- [Write a template pack](/scarab/how-to/write-a-template-pack.md)
+- [Deploy a template pack](/scarab/how-to/deploy-a-template-pack.md)
+
+### Reference
+
+- [Reference](/scarab/reference.md)
+- [Config port](/scarab/reference/config-port.md)
+- [Template packs](/scarab/reference/template-packs.md)
+- [Template driver](/scarab/reference/driver.md)
+
+### Explanation
+
+- [Explanation](/scarab/explanation.md)
+- [Architecture](/scarab/explanation/architecture.md)
+- [Boundaries](/scarab/explanation/boundaries.md)
+

@@ -1,0 +1,748 @@
+---
+url: /scarab/getting-started.md
+---
+# Getting started
+
+Load a typed config from a file with `scarab-config-file`. The whole
+flow is three steps: define your serde model, pick a
+[`Discovery`](/reference/config-port#discovery) spec, load.
+
+## 1. Add the crates
+
+```toml
+[dependencies]
+scarab-config = "0.1"
+scarab-config-file = "0.1"
+scarab-config-yaml = "0.1"
+scarab-config-toml = "0.1"
+serde = { version = "1", features = ["derive"] }
+```
+
+## 2. Define your config model
+
+Scarab stays generic — your repo owns the `Config` type:
+
+```rust
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+struct MyConfig {
+    name: String,
+    port: u16,
+}
+```
+
+## 3. Load it
+
+```rust
+use scarab_config_file::FileSource;
+
+let cfg: MyConfig = FileSource::for_app("myapp").load()?;
+```
+
+`FileSource::for_app("myapp")` wires the org conventions for you:
+env var `MYAPP_CONFIG`, search dirs `[".", "~/.config/myapp"]`, and
+the standard format pair (YAML preferred, TOML fallback). For `myapp`
+it resolves, in order:
+
+1. `$MYAPP_CONFIG` — an explicit file path
+2. `./myapp.yaml`, `./myapp.yml`, `./myapp.toml`
+3. `~/.config/myapp/myapp.yaml`, `.yml`, `.toml`
+
+The first existing file wins. See [reference: config
+port](/reference/config-port) for the full contract and [how-to:
+customize discovery](/how-to/customize-config-discovery) for custom
+search specs.
+
+## Next steps
+
+* [Write a template pack](/how-to/write-a-template-pack) — ship
+  rendered config files as a tamias `type: template` package.
+* [Deploy a template pack](/how-to/deploy-a-template-pack) — the
+  driver verbs, variable layers, and uninstall semantics.
+
+---
+
+---
+url: /scarab/how-to.md
+---
+# How-to guides
+
+* [Customize config discovery](customize-config-discovery.md)
+* [Write a template pack](write-a-template-pack.md)
+* [Deploy a template pack](deploy-a-template-pack.md)
+
+---
+
+---
+url: /scarab/how-to/customize-config-discovery.md
+---
+# Customize config discovery
+
+`Discovery::for_app` covers the common case. When it doesn't — a
+different env var, extra search dirs, a different format set, or an
+explicit `--config` path — build the [`FileSource`](/reference/config-port#filesource-t)
+directly.
+
+## Custom env var and dirs
+
+```rust
+use scarab_config::{Discovery, expand_tilde};
+use scarab_config_file::FileSource;
+
+let discovery = Discovery::for_app("myapp")
+    .env_var("MYAPP_CFG")                    // override $MYAPP_CONFIG
+    .dirs([".", "~/.config/myapp", "/etc/myapp"]);
+
+let src = FileSource::new(discovery);
+```
+
+`dirs` entries may contain `~` — expanded via `expand_tilde` at
+search time. `.env_var("…")` replaces the env step; `.without_env()`
+removes it entirely. `Discovery::bare("myapp")` starts with no env var
+and no dirs — fill both yourself.
+
+## Explicit path wins over everything
+
+Set `explicit` on the source (a `--config`-style flag) and it takes
+precedence over the env var and all discovery candidates:
+
+```rust
+let mut src = FileSource::new(discovery);
+src.explicit = Some("/etc/myapp/overrides.toml".into());
+```
+
+An explicit path that doesn't exist is an error naming the path — a
+named path that misses is a config error, not a silent skip.
+
+## Custom format set or order
+
+`FileSource::new` uses the standard pair — `[YamlFormat,
+TomlFormat]`. `with_formats` takes any `Vec<Box<dyn
+ConfigFormat<T>>>`; earlier formats win candidate ties within a
+directory, and each format's `extensions()` are tried in declared
+order. To make TOML preferred:
+
+```rust
+use scarab_config_toml::TomlFormat;
+use scarab_config_yaml::YamlFormat;
+
+let src = FileSource::with_formats(
+    discovery,
+    vec![Box::new(TomlFormat), Box::new(YamlFormat)],
+);
+```
+
+With TOML first, `myapp.toml` beats `myapp.yaml` in the same
+directory.
+
+## Extensionless explicit paths
+
+`load_path` dispatches on extension; a path with no extension parses
+with the first (preferred) format — the back-compat seam for
+`--config` pointing at a suffix-less file. An extension no format
+claims is an error: `no config format claims '.json'`.
+
+## Parse a specific file
+
+Skip discovery entirely when the caller already resolved a path:
+
+```rust
+let cfg: MyConfig = src.load_path(Path::new("/etc/myapp.toml"))?;
+```
+
+## Inject env lookups in tests
+
+`locate_with` / `load_with` take `env: &dyn Fn(&str) ->
+Option<String>` so tests never touch the process environment:
+
+```rust
+let cfg = src.load_with(&|k| (k == "MYAPP_CONFIG").then(|| "/tmp/x.yaml".into()))?;
+```
+
+---
+
+---
+url: /scarab/how-to/write-a-template-pack.md
+---
+# Write a template pack
+
+A template pack is a tamias package with `type: template` whose
+`tamias.yaml` carries a `template:` table. The
+`tamias-driver-template` driver renders each declared `src` through
+the engine and writes it at `into`.
+
+## Pack layout
+
+```
+repo-bootstrap/
+├── tamias.yaml
+├── app.toml.tmpl
+└── notes.md.tmpl
+```
+
+## Manifest
+
+```yaml
+name: repo-bootstrap
+type: template
+version: "0.1.0"
+
+template:
+  vars:
+    env: dev            # defaults — lowest-precedence layer
+  files:
+    - src: app.toml.tmpl
+      into: ./config/app.toml
+    - src: notes.md.tmpl
+      into: docs/NOTES.md
+```
+
+* `template.vars` — flat `name → value` defaults (any JSON value:
+  strings, numbers, bools, lists, tables). Overridable per deploy.
+* `template.files[]` — `src` is a path inside the pack payload,
+  `into` the render target relative to the deploy target dir.
+
+Both `src` and `into` must be safe relative paths: absolute paths,
+empty paths, and `..` components are rejected at validation time —
+before anything is written.
+
+## Template syntax
+
+The engine is [minijinja](https://github.com/mitsuhiko/minijinja) —
+`{{ var }}`, `{% if %}`, `{% for %}`. It is sandboxed: pack templates
+are third-party content and cannot reach the filesystem or network.
+Undefined variables render as empty.
+
+```jinja
+# app.toml.tmpl
+env = "{{ env }}"
+repo = "{{ repo }}"
+user = "{{ user }}"
+```
+
+## Variable layers
+
+Later layers win:
+
+1. `template.vars` pack defaults
+2. auto vars — `repo` (git remote basename or dir name of the target
+   repo) and `user` (`$USER`/`$LOGNAME`)
+3. `--config` vars file (JSON / TOML / YAML by extension)
+4. `$TEMPLATE_VAR_<NAME>` env vars (lowercased name)
+5. trailing `key=value` args
+
+See [deploy a template pack](/how-to/deploy-a-template-pack) for the
+full invocation.
+
+## Validate before shipping
+
+`tamias-driver-template install --dir <pack> --name <pkg>` parses the
+manifest, checks every `src` exists and compiles, resolves the var
+context, and previews the render plan — writing nothing. Run it
+against your pack dir before `tamias publish`.
+
+---
+
+---
+url: /scarab/how-to/deploy-a-template-pack.md
+---
+# Deploy a template pack
+
+Template packs deploy through tamias: `tamias install` fetches the
+package and dispatches the `type: template` verbs to
+`tamias-driver-template`. You can also run the driver binary directly
+against a local payload dir.
+
+## Via tamias
+
+```bash
+tamias install git:9aia/scarab//libraries/repo-bootstrap
+```
+
+Tamias calls the driver's `install` verb for validation, then
+`deploy` for the actual render+write. `uninstall`/`remove` reverses
+it.
+
+## Directly
+
+```bash
+tamias-driver-template <verb> --dir <payload> --name <pkg> \
+    [--config <vars-file>] [--target <dir>] [--dry-run] [key=value …]
+```
+
+| Verb | What it does |
+| --- | --- |
+| `install` | Validate the pack and preview the render plan. Writes nothing. |
+| `deploy` | Render each `template.files[]` entry and write it at `into` under the target dir. |
+| `uninstall` | Remove files still matching the recorded sha256 digests. |
+| `config-schema` | Print the JSON Schema for the `--config` vars file. |
+| `capabilities` | Print `{"types": ["template"], "verbs": […]}` — the discovery probe. |
+
+## Choosing the target dir
+
+`deploy`/`uninstall` write relative to, in order:
+
+1. `--target <dir>`
+2. `$TEMPLATE_TARGET`
+3. the current working directory
+
+## Overriding variables
+
+Vars resolve in layers (later wins): pack `template.vars` → auto vars
+(`repo`, `user`) → `--config` file → `$TEMPLATE_VAR_<NAME>` env →
+`key=value` args.
+
+```bash
+# vars file — parsed as JSON/TOML/YAML by extension (default YAML)
+tamias-driver-template deploy --dir ./repo-bootstrap --name repo-bootstrap \
+    --config prod.yaml --target ~/myrepo
+
+# env + inline overrides
+env=prod TEMPLATE_VAR_replicas=3 \
+tamias-driver-template deploy --dir ./repo-bootstrap --name repo-bootstrap \
+    --target ~/myrepo replicas=5
+```
+
+`--dry-run` prints what would be written without touching the target.
+
+## Uninstall semantics
+
+`deploy` records `.scarab-template-state.json` at the target root —
+each `into` path mapped to the sha256 of what was written.
+`uninstall` deletes only files whose current digest still matches;
+files modified since deploy are left in place and reported as kept.
+State entries for already-removed files are dropped, and the state
+file itself is removed once nothing remains.
+
+---
+
+---
+url: /scarab/reference.md
+---
+# Reference
+
+* [Config port](config-port.md) — `ConfigSource`/`ConfigFormat` traits, `Discovery`, `FileSource`
+* [Template packs](template-packs.md) — `template:` manifest schema, var context, safe paths
+* [Template driver](driver.md) — `tamias-driver-template` argv contract, state file
+
+---
+
+---
+url: /scarab/reference/config-port.md
+---
+# Config port
+
+The config plane is two traits plus a search spec, generic over the
+config model `T` (`Deserialize + Serialize`). Scarab never names a
+consumer's `Config` type.
+
+## `ConfigFormat<T>`
+
+Syntax-level: which extensions a format claims, `parse`/`render`
+over serde. Object-safe via a blanket impl — one `TomlFormat` /
+`YamlFormat` value serves every model.
+
+```rust
+pub trait ConfigFormat<T>: Send + Sync {
+    fn extensions(&self) -> &'static [&'static str];
+    fn parse(&self, text: &str) -> Result<T, String>;
+    fn render(&self, config: &T) -> Result<String, String>;
+}
+```
+
+| Impl | Crate | Claims |
+| --- | --- | --- |
+| `YamlFormat` | `scarab-config-yaml` | `yaml`, `yml` (in that order) |
+| `TomlFormat` | `scarab-config-toml` | `toml` |
+
+`scarab_config::format_for(path, formats)` returns the format
+claiming `path`'s extension, or `None`.
+
+## `ConfigSource<T>`
+
+Source-level: `load() -> Result<T, String>`. Impls compose formats —
+`scarab-config-file`'s `FileSource` is the discovery + dispatch impl;
+env/remote sources are new impls of the same trait.
+
+## `Discovery`
+
+The shared search spec every file-backed source uses. Nothing is
+hardcoded per app — basename, env var, and dirs are caller-supplied.
+
+| Field | Meaning |
+| --- | --- |
+| `name` | Config file basename — `myco` → `myco.yaml`, `myco.yml`, `myco.toml` |
+| `env_var` | Env var naming an explicit config file (`$MYCO_CONFIG`); `None` disables the env step |
+| `dirs` | Directories searched in order for `<name>.<ext>`; `~` expands via `expand_tilde` |
+
+Constructors and builders:
+
+* `Discovery::for_app(name)` — env var `<NAME>_CONFIG` (uppercased),
+  dirs `[".", "~/.config/<name>"]`
+* `Discovery::bare(name)` — no env var, no dirs
+* `.env_var(var)` / `.without_env()` — set or disable the env step
+* `.dirs(iter)` — replace search dirs, in order
+
+## `FileSource<T>`
+
+File-backed `ConfigSource`: discovery + extension dispatch over a set
+of `ConfigFormat<T>`s.
+
+| Field | Meaning |
+| --- | --- |
+| `discovery` | Where to search |
+| `explicit` | Explicit `--config`-style path; wins over `discovery.env_var` |
+| `formats` | Syntax formats in preference order |
+
+Constructors:
+
+* `FileSource::new(discovery)` — standard formats `[Yaml, Toml]`
+* `FileSource::with_formats(discovery, formats)` — caller-chosen set/order
+* `FileSource::for_app(name)` — `Discovery::for_app` + standard formats
+* `FileSource::standard_formats()` — the `[YamlFormat, TomlFormat]` pair
+
+Requires `T: DeserializeOwned + Serialize` for `new`/`for_app` (the
+`ConfigSource` impl bound).
+
+## Resolution order
+
+`locate` picks the config path:
+
+1. `explicit` path, else `$<NAME>_CONFIG` — a named path that doesn't
+   exist is an error (`config file not found: …`), not a silent skip
+2. `<dir>/<name>.<ext>` per search dir, in dir order; within a dir,
+   formats in preference order and each format's extensions in
+   declared order — YAML before TOML by convention
+
+`load` reads the file and dispatches parsing by extension; an
+extensionless explicit path parses with the first (preferred) format;
+an unclaimed extension errors with `no config format claims '.<ext>'`.
+
+When nothing is found, the error names the app, the claimed
+extensions, and the search steps actually configured.
+
+## Path helpers
+
+* `home_dir()` — `$HOME`, else `$USERPROFILE`, else `/`
+* `expand_tilde(path)` — `~`/`~/…` expansion; `~user`, relative, and
+  absolute paths pass through untouched
+* `user_config_dir(name)` — `~/.config/<name>` (tilde expanded at
+  search time)
+
+---
+
+---
+url: /scarab/reference/template-packs.md
+---
+# Template packs
+
+A template pack is a tamias package with `type: template` whose
+`tamias.yaml` carries a `template:` table. The port lives in
+`scarab-template` (pure domain — no I/O, no engine specifics); impls
+own the syntax.
+
+## Manifest schema
+
+```yaml
+name: repo-bootstrap
+type: template
+version: "0.1.0"
+
+template:
+  vars:                      # optional — flat name → JSON value map
+    env: dev
+    replicas: 1
+  files:                     # required, non-empty
+    - src: app.toml.tmpl     # path inside the pack payload
+      into: ./config/app.toml  # render target, relative to target dir
+```
+
+### `template.vars`
+
+`BTreeMap<String, serde_json::Value>` — defaults layer, lowest
+precedence. Values may be strings, numbers, bools, arrays, or tables;
+templates see them as engine-native values.
+
+### `template.files[]`
+
+| Field | Meaning |
+| --- | --- |
+| `src` | Template path inside the payload root |
+| `into` | Render target, relative to the deploy target dir |
+
+`into` must normalize to a non-empty relative path — absolute paths,
+`..`, root/prefix components, and empty results are
+`TemplateError::UnsafeTarget`. `src` follows the same rule inside the
+payload (`TemplateError::UnsafeSource`).
+
+## `TemplateEngine`
+
+The engine port — one impl per syntax family:
+
+```rust
+pub trait TemplateEngine: Send + Sync {
+    fn name(&self) -> &'static str;
+    fn render(&self, source: &str, ctx: &serde_json::Value)
+        -> Result<String, Box<dyn Error + Send + Sync>>;
+}
+```
+
+`ctx` is a JSON object; engines map it to their native value.
+`MinijinjaEngine` (`scarab-template-minijinja`) is the v1 impl —
+sandboxed, keeps the template's trailing newline so rendered config
+files stay POSIX-clean.
+
+## Variable context
+
+`merge_context(defaults, auto, file, args)` merges flat
+`name → JSON value` layers, later winning:
+
+```
+template.vars  <  auto vars  <  --config file  <  env+args
+```
+
+The driver (`tamias-driver-template`) supplies the layers:
+
+1. `template.vars` pack defaults
+2. auto vars — `repo` (git `remote.origin.url` basename of the target
+   dir, else canonical dir name) and `user` (`$USER`/`$LOGNAME`)
+3. `--config` file — JSON by `.json`, TOML by `.toml`, YAML otherwise
+   (incl. extensionless); must be a flat map
+4. `$TEMPLATE_VAR_<NAME>` env vars, name lowercased, value parsed as
+   JSON falling back to string
+5. trailing `key=value` args — value parsed as JSON, falling back to
+   string
+
+## Errors
+
+| Variant | Meaning |
+| --- | --- |
+| `Manifest` | Pack manifest or `template:` table failed to parse |
+| `UnsafeTarget` | `into` escaped the deploy dir |
+| `UnsafeSource` | `src` escaped the payload root |
+| `NotUtf8` | Rendered output isn't valid UTF-8 text |
+
+---
+
+---
+url: /scarab/reference/driver.md
+---
+# Template driver
+
+`tamias-driver-template` is the tamias content driver for
+`type: template` packs — it renders a pack's files into declared
+targets. Discovered by tamias as `tamias-driver-template` on
+`PATH`/`drivers/` like every content driver.
+
+## argv contract
+
+Tamias verbs always arrive as:
+
+```
+tamias-driver-template <verb> --dir <payload> --name <pkg> \
+    [--config <vars-file>] [--target <dir>] [--dry-run] [key=value …]
+```
+
+| Flag | Meaning |
+| --- | --- |
+| `--dir` | Pack payload dir (contains `tamias.yaml`/`.yml`) — required for install/deploy/uninstall |
+| `--name` | Package name — required for install/deploy/uninstall |
+| `--config` | Vars file — JSON/TOML/YAML by extension, YAML default |
+| `--target` | Deploy target dir — overrides `$TEMPLATE_TARGET` and cwd |
+| `--dry-run` | Print actions without writing (deploy/uninstall) |
+| `key=value` | Trailing var overrides, highest-precedence layer |
+
+## Verbs
+
+| Verb | Behavior | Exit |
+| --- | --- | --- |
+| `install` | Validate manifest + every `src` compiles + vars resolve; print render plan. Writes nothing — the payload dir is the evictable fetch cache. | 0 / 1 / 2 |
+| `deploy` | Render each `template.files[]` entry, write at `into` under target dir, record state. | 0 / 1 / 2 |
+| `uninstall` | Remove files still matching recorded sha256 digests; modified files kept + reported. | 0 / 1 / 2 |
+| `config-schema` | Print JSON Schema (draft 2020-12) for the `--config` vars file — a flat `name = value` map. | 0 |
+| `capabilities` | Print `{"name": "template", "types": ["template"], "verbs": ["install","deploy","uninstall","config-schema"], "engine": "minijinja"}`. | 0 |
+
+Exit codes: `0` success, `1` operational error (message on stderr —
+tamias wraps it as `driver … failed: …`), `2` usage/arg error.
+
+## State file
+
+`deploy` writes `.scarab-template-state.json` at the target root:
+
+```json
+{
+  "pack": "repo-bootstrap",
+  "files": {
+    "config/app.toml": "<sha256 hex>",
+    "docs/NOTES.md": "<sha256 hex>"
+  }
+}
+```
+
+The file is shared per target dir — `deploy` merges its entries into
+any existing state (multiple packs can coexist). `uninstall` removes
+entries as files are deleted or found missing; the state file itself
+is removed once `files` is empty.
+
+## Driver errors
+
+All failures surface as `OpsError` — a readable message on stderr:
+
+* missing `--dir`/manifest, `type` isn't `"template"`, empty
+  `template.files`, bad `template:` table shape
+* unsafe `src`/`into` paths (rejected before any write)
+* missing/unreadable payload files, render failures
+* malformed `--config` vars file (must parse to a map)
+* I/O errors on read/write/remove
+
+---
+
+---
+url: /scarab/explanation.md
+---
+# Explanation
+
+* [Architecture](architecture.md)
+* [Boundaries](boundaries.md)
+
+---
+
+---
+url: /scarab/explanation/architecture.md
+---
+# Architecture
+
+Scarab is ports-and-adapters in two planes: **config loading** and
+**templated content**. Both are generic — scarab never names a
+consumer's types.
+
+## The config plane
+
+```
+ConfigSource<T>  ──load()──▶  T            (the port)
+      ▲                            ▲
+      │ impl                       │ consumer's serde model
+scarab-config-file          MyConfig, TamiasConfig, …
+      │ dispatches by extension
+ConfigFormat<T>  ──parse/render──▶  text   (syntax port)
+      ▲
+scarab-config-toml / scarab-config-yaml
+```
+
+* `scarab-config` is pure: traits, the `Discovery` spec, path
+  helpers — no I/O, no formats, no models.
+* `scarab-config-file` is the discovery impl every org repo
+  copy-pasted: explicit path → env var → search dirs, extension
+  dispatch across a format list.
+* `scarab-config-toml` / `-yaml` own only syntax — serde
+  parse/render over any `T`. Formats are separate crates so a
+  consumer can carry just the syntax it wants.
+
+Generic-over-`T` is the load-bearing decision: one `FileSource`
+serves `myco`, `tamias`, `tarsi`, and every future repo because the
+model stays in the consumer. The trait objects (`&dyn
+ConfigFormat<T>`) keep `formats` heterogeneous without generics
+exploding at the call site.
+
+Discovery is a *spec*, not a search loop — `FileSource` interprets
+it, and env/remote `ConfigSource` impls can reuse the same
+vocabulary (`env_var`, `dirs`, preference order) without inheriting
+file semantics.
+
+## The template plane
+
+```
+tamias pack (type: template)
+      │  tamias.yaml `template:` table
+      ▼
+scarab-template ── PackTemplate/TemplateFile/TemplateEngine (pure)
+      │
+      ▼
+tamias-driver-template ── verbs, vars, state file (the ops impl)
+      │
+      ▼
+scarab-template-minijinja ── the one engine impl (v1)
+```
+
+* `scarab-template` holds the pack model and path safety — pure
+  domain, engine-agnostic. `merge_context` defines layer precedence;
+  `safe_into`/`safe_src` define what "inside the target" means.
+* `tamias-driver-template` is where I/O lives: manifest loading,
+  var resolution (pack defaults → auto → file → env → args),
+  render+write, digest state. It implements the tamias driver
+  contract, so packs distribute through tamias like every other
+  content type — no bespoke install path.
+* `scarab-template-minijinja` is deliberately the only engine:
+  minijinja is small, sandboxed by construction, and its
+  `{{ }}`/`{% %}` syntax covers config-file templating without a
+  plugin system. The port exists so a second syntax family can land
+  without touching the model or the driver.
+
+## Why the split
+
+Config and templates share a shape — *declared inputs in, files
+out* — but not a mechanism. Config is *read*: find a file, parse to
+a typed model. Templates are *write*: render declared sources to
+declared targets with a variable context. Keeping them as separate
+ports means a consumer can adopt one without the other, and each
+plane's invariants (discovery order vs. path safety + digest
+state) stay local.
+
+## Invariants worth knowing
+
+* **Formats prefer YAML.** Within a directory, `yaml` → `yml` →
+  `toml`; across dirs, earlier dirs win regardless of format.
+* **Named paths fail loudly.** An explicit/`$*_CONFIG` path that
+  misses is an error; discovery candidates skip silently.
+* **Templates can't escape.** `..`/absolute/empty targets are
+  rejected at validation, before any write.
+* **Uninstall is digest-exact.** Only files still matching their
+  recorded sha256 are removed; user edits are preserved and
+  reported.
+* **Secrets stay names.** Config surfaces carry secret *names*,
+  never values — cuora owns the values.
+
+---
+
+---
+url: /scarab/explanation/boundaries.md
+---
+# Boundaries
+
+Scarab owns two things: **config loading** (discovery + formats,
+generic over the model) and **templated content packs** (the
+`type: template` driver). Everything adjacent belongs to a neighbor.
+
+## Neighbors
+
+| Repo | Owns | Scarab's relation |
+| --- | --- | --- |
+| **tamias** | Content distribution — refs, fetch, store, install pipeline, driver dispatch | Scarab ships *inside* tamias's world: `tamias-driver-template` is a content driver; template packs are tamias packages. Scarab never reimplements fetch/install/store. |
+| **cuora** | Secret values — sealed, not spilled | Config carries secret *names*, never values. A template var named `api_key` holds a reference/name; cuora resolves it. |
+| **tarsi** | Release plane — changelog → bump → tag → publish | A consumer: `tarsi.toml`/profile loading rides `scarab-config`. |
+| **myco / kuda / mimus** | Work ledger, code-map, verification | Consumers of the config port for their own `<name>.yaml`/`.toml` discovery — the exact problem P-017 generalized. |
+| **hypha** | Pure distributed substrate | The P-015 config crates were ported *here*, not kept there — hypha stays substrate-only. |
+| **peregrin / sepia / pavo** | Orchestration, sessions, agent UI | May consume either plane; neither defines scarab's contracts. |
+
+## What scarab deliberately is not
+
+* **Not a config schema registry.** It loads and renders; it doesn't
+  validate semantics. Your serde model *is* the schema.
+* **Not a secrets store.** See cuora above — the boundary is
+  enforced by convention (`secret names, never values`) and by
+  cuora owning resolution.
+* **Not a template marketplace.** Packs are ordinary tamias
+  packages; distribution, provenance, and digests are tamias's
+  job.
+* **Not consumer-aware.** No crate in scarab may name another
+  repo's `Config` type — that coupling is what the port exists to
+  prevent.
+
+## The naming story
+
+*Scarabaeus sacer* — the sacred scarab rolls the ball into place;
+scarab amulets were seals and signets. Config as the seal that
+validates what runs: discovery finds the right file, the format
+parses it, the model validates it. Design history lives in the org
+ledger — proposal P-017 (supersedes P-015).
