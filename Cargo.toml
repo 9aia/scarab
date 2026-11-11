@@ -5,6 +5,9 @@ members = [
     "crates/scarab-config-file",
     "crates/scarab-config-toml",
     "crates/scarab-config-yaml",
+    "crates/scarab-template",
+    "crates/scarab-template-minijinja",
+    "crates/tamias-driver-template",
     "xtask",
 ]
 
@@ -26,11 +29,17 @@ scarab-config = { path = "crates/scarab-config", version = "0.1.0" }
 scarab-config-file = { path = "crates/scarab-config-file", version = "0.1.0" }
 scarab-config-toml = { path = "crates/scarab-config-toml", version = "0.1.0" }
 scarab-config-yaml = { path = "crates/scarab-config-yaml", version = "0.1.0" }
+scarab-template = { path = "crates/scarab-template", version = "0.1.0" }
+scarab-template-minijinja = { path = "crates/scarab-template-minijinja", version = "0.1.0" }
 
 serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
 serde_yaml_ng = "0.10"
 toml = "0.8"
 tempfile = "3"
+minijinja = "2"
+sha2 = "0.10"
+thiserror = "2.0"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

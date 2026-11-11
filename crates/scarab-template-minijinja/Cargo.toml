@@ -1,0 +1,16 @@
+[package]
+name = "scarab-template-minijinja"
+description = "minijinja impl of scarab_template::TemplateEngine — Jinja-style {{ var }} / {% if %} syntax, sandboxed by default"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+scarab-template.workspace = true
+minijinja.workspace = true
+serde_json.workspace = true

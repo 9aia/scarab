@@ -1,0 +1,22 @@
+[package]
+name = "tamias-driver-template"
+description = "tamias content driver for type: template — renders template-pack files into declared targets at deploy"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+scarab-config.workspace = true
+scarab-template.workspace = true
+scarab-template-minijinja.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml_ng.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+toml.workspace = true

@@ -24,6 +24,9 @@ repo chores.
 | `scarab-config-file` | file-discovery impl — explicit path → `$<NAME>_CONFIG` → `./<name>.<ext>` → `~/.config/<name>/`; YAML preferred on ties |
 | `scarab-config-toml` | TOML `ConfigFormat` — serde parse/render for any model |
 | `scarab-config-yaml` | YAML `ConfigFormat` — claims `.yaml`/`.yml` |
+| `scarab-template` | template port — `render(text, ctx)` + `TemplateContext` merge, safe-path validation |
+| `scarab-template-minijinja` | MiniJinja `TemplateEngine` impl — `{{ }}` vars + `{% %}` blocks |
+| `tamias-driver-template` | `type: template` content driver — install validates, deploy renders pack payloads to target paths, uninstall removes |
 
 A consumer keeps only its serde `Config` model:
 
@@ -31,6 +34,44 @@ A consumer keeps only its serde `Config` model:
 let cfg: MyConfig = FileSource::for_app("myapp", "MYAPP_CONFIG")
     .load()?;
 ```
+
+## `type: template` packs
+
+Template packs are tamias packages whose payload is rendered at
+install/deploy time. The pack's `tamias.yaml` carries a
+`template:` section (driver-specific keys ride alongside the
+standard manifest):
+
+```yaml
+name: repo-bootstrap
+type: template
+version: "0.1.0"
+
+template:
+  vars:
+    env: dev            # defaults, overridable per deploy
+  files:
+    - src: app.toml.tmpl
+      into: ./config/app.toml
+    - src: notes.md.tmpl
+      into: docs/NOTES.md
+```
+
+Variable layers (later wins): `template.vars` defaults → auto vars
+(`repo`, `user`) → `--config` file (json/toml/yaml) →
+`TEMPLATE_VAR_<NAME>` env → trailing `key=value` args.
+
+```bash
+tamias install git:9aia/scarab//libraries/repo-bootstrap
+# driver dispatches install/deploy/uninstall/config-schema/capabilities
+# like every tamias content driver
+```
+
+Targets must be safe relative paths — absolute paths and `..` are
+rejected. `deploy` records sha256 digests in
+`.scarab-template-state.json`; modified files are left alone and
+reported; `uninstall` removes only files still matching their
+recorded digest.
 
 ## Commands
 

@@ -1,0 +1,16 @@
+[package]
+name = "scarab-template"
+description = "Template port — TemplateEngine trait + template-pack model (files, var defaults), generic over the render context"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
