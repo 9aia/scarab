@@ -20,19 +20,21 @@ repo chores.
 
 | Crate | Role |
 | --- | --- |
-| `scarab-config` | `ConfigSource<T>`/`ConfigFormat<T>` traits + `Discovery` spec — generic over the config model, no I/O |
-| `scarab-config-file` | file-discovery impl — explicit path → `$<NAME>_CONFIG` → `./<name>.<ext>` → `~/.config/<name>/`; YAML preferred on ties |
+| `scarab-config` | `ConfigSource<T>`/`ConfigFormat<T>` traits + `Discovery` spec + JSON merge (`merge_value`/`apply_overrides`) — generic over the config model, no I/O |
+| `scarab-config-file` | file impls — `FileSource` first-match and `LayeredFileSource` merge-all; explicit path → `$<NAME>_CONFIG` → `./<name>.<ext>` → `~/.config/<name>/`; YAML preferred on ties |
 | `scarab-config-toml` | TOML `ConfigFormat` — serde parse/render for any model |
 | `scarab-config-yaml` | YAML `ConfigFormat` — claims `.yaml`/`.yml` |
-| `scarab-template` | template port — `render(text, ctx)` + `TemplateContext` merge, safe-path validation |
-| `scarab-template-minijinja` | MiniJinja `TemplateEngine` impl — `{{ }}` vars + `{% %}` blocks |
-| `tamias-driver-template` | `type: template` content driver — install validates, deploy renders pack payloads to target paths, uninstall removes |
+| `scarab-template` | template port — `TemplateEngine` trait, `PackTemplate` model, `merge_context`, safe-path validation |
+| `scarab-template-minijinja` | MiniJinja `TemplateEngine` impl — `{{ }}` vars + `{% %}` blocks, sandboxed |
+| `scarab-testkit` | conformance suites (`assert_config_format/discovery/source/merge_*`, template engine) + golden fixtures |
+| `tamias-driver-template` | `type: template` content driver — install validates, deploy renders pack payloads (incl. `extends` chains) to target paths, uninstall removes |
 
 A consumer keeps only its serde `Config` model:
 
 ```rust
-let cfg: MyConfig = FileSource::for_app("myapp", "MYAPP_CONFIG")
-    .load()?;
+let cfg: MyConfig = FileSource::for_app("myapp").load()?;
+// or, to merge layers instead of first-match:
+let cfg: MyConfig = LayeredFileSource::for_app("myapp").load()?;
 ```
 
 ## `type: template` packs
@@ -57,12 +59,16 @@ template:
       into: docs/NOTES.md
 ```
 
-Variable layers (later wins): `template.vars` defaults → auto vars
+Variable layers (later wins): ancestor `template.vars` defaults
+(`extends` chain) → this pack's `template.vars` → auto vars
 (`repo`, `user`) → `--config` file (json/toml/yaml) →
 `TEMPLATE_VAR_<NAME>` env → trailing `key=value` args.
+`template.extends` names a parent pack by tamias ref; tamias
+materializes it at `.scarab-parent/` and the chain renders
+ancestor-first — children win on `into` conflicts.
 
 ```bash
-tamias install git:9aia/scarab//libraries/repo-bootstrap
+tamias install git:9aia/scarab//libraries/rust-repo   # the shipped example pack
 # driver dispatches install/deploy/uninstall/config-schema/capabilities
 # like every tamias content driver
 ```
