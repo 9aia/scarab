@@ -53,6 +53,8 @@ search specs.
 
 ## Next steps
 
+- [Layer configs from several files](/how-to/layered-config) — merge
+  `~/.config/<name>/` with a project file instead of first-match.
 - [Write a template pack](/how-to/write-a-template-pack) — ship
   rendered config files as a tamias `type: template` package.
 - [Deploy a template pack](/how-to/deploy-a-template-pack) — the

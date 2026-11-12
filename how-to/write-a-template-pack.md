@@ -23,7 +23,7 @@ version: "0.1.0"
 
 template:
   vars:
-    env: dev            # defaults — lowest-precedence layer
+    env: dev # defaults — lowest-precedence layer
   files:
     - src: app.toml.tmpl
       into: ./config/app.toml
@@ -54,11 +54,37 @@ repo = "{{ repo }}"
 user = "{{ user }}"
 ```
 
+## Inherit from a parent pack
+
+`template.extends` names another template pack by tamias ref — the
+child renders the parent's files too, with the child's `into`s and
+`vars` winning:
+
+```yaml
+template:
+  extends: git:9aia/scarab//libraries/rust-repo
+  vars:
+    channel: nightly # overrides the parent's "stable" default
+  files:
+    - src: extra.toml.tmpl
+      into: ./extra.toml
+```
+
+`tamias install` resolves the ref and materializes the parent's
+payload inside yours at `.scarab-parent/` (recursively for
+grandparents). The driver renders ancestor-first: parent files
+write first, yours last — on an `into` conflict **you win**, and the
+state digest records your version. See
+[template packs — composition](/reference/template-packs#composition)
+for the full contract, including the vendored-parent case
+(`.scarab-parent/` present without `extends`).
+
 ## Variable layers
 
 Later layers win:
 
-1. `template.vars` pack defaults
+1. ancestor `template.vars` defaults (extends chain, ancestor-first),
+   then this pack's `template.vars`
 2. auto vars — `repo` (git remote basename or dir name of the target
    repo) and `user` (`$USER`/`$LOGNAME`)
 3. `--config` vars file (JSON / TOML / YAML by extension)

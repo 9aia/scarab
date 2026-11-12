@@ -24,6 +24,11 @@ features:
     details: explicit path → $<NAME>_CONFIG → ./<name>.<ext> → ~/.config/<name>/ — YAML preferred on ties
     link: /how-to/customize-config-discovery
     linkText: customize discovery
+  - icon: 🧱
+    title: Layered configs
+    details: LayeredFileSource merges one file per search dir + explicit/override layers as JSON — user config as base, project config on top
+    link: /how-to/layered-config
+    linkText: layer configs
   - icon: 🧩
     title: Template packs via tamias
     details: "type: template packages render declared files into target paths — install validates, deploy writes, uninstall reverses"

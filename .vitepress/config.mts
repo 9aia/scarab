@@ -6,8 +6,7 @@ export default defineConfig({
     plugins: [llmstxt()],
   },
   title: "scarab",
-  description:
-    "config & template expertise — generic config loading and templated content packs",
+  description: "config & template expertise — generic config loading and templated content packs",
   base: "/scarab/",
   srcExclude: ["README.md"],
   ignoreDeadLinks: [/\/api\//],
@@ -20,17 +19,25 @@ export default defineConfig({
         text: "LLMs",
         items: [
           { text: "llms.txt", link: "https://9aia.com/scarab/llms.txt", target: "_blank" },
-          { text: "llms-full.txt", link: "https://9aia.com/scarab/llms-full.txt", target: "_blank" },
+          {
+            text: "llms-full.txt",
+            link: "https://9aia.com/scarab/llms-full.txt",
+            target: "_blank",
+          },
         ],
       },
     ],
     sidebar: [
-      { text: "Getting Started", items: [{ text: "Load a typed config", link: "/getting-started" }] },
+      {
+        text: "Getting Started",
+        items: [{ text: "Load a typed config", link: "/getting-started" }],
+      },
       {
         text: "How-to",
         items: [
           { text: "Overview", link: "/how-to/" },
           { text: "Customize config discovery", link: "/how-to/customize-config-discovery" },
+          { text: "Layer configs from several files", link: "/how-to/layered-config" },
           { text: "Write a template pack", link: "/how-to/write-a-template-pack" },
           { text: "Deploy a template pack", link: "/how-to/deploy-a-template-pack" },
         ],
@@ -42,6 +49,7 @@ export default defineConfig({
           { text: "Config port", link: "/reference/config-port" },
           { text: "Template packs", link: "/reference/template-packs" },
           { text: "Template driver", link: "/reference/driver" },
+          { text: "Testkit", link: "/reference/testkit" },
         ],
       },
       {
