@@ -18,6 +18,9 @@ type); `-file`/`-toml`/`-yaml` are the impls.
 | `crates/scarab-config-toml` | TOML `ConfigFormat` — serde parse/render |
 | `crates/scarab-config-yaml` | YAML `ConfigFormat` — claims `.yaml`/`.yml` |
 | `crates/scarab-testkit` | conformance suites (`assert_config_format/discovery/source/merge_*`) + golden fixtures for the config ports |
+| `crates/scarab-template` | template port — `TemplateEngine` trait, `PackTemplate` model, `merge_context`, safe-path validation, and the agnostic composition contract (`compose`: `Extends`/`ParentDecl`/`MergeRules` + `compose_chain`/`apply_into_policy` + `PackLoader`/`ParentLocator` ports — spec in `COMPOSITION.md`) |
+| `crates/scarab-template-minijinja` | MiniJinja `TemplateEngine` impl — `{{ }}` vars + `{% %}` blocks, sandboxed |
+| `crates/tamias-driver-template` | `type: template` content driver — install validates, deploy renders pack payloads (incl. `extends` chains via the materialized-parent locator) to target paths, uninstall removes |
 | `xtask` (`scarab-xtask`) | check / test / coverage / install / package / smoke / site |
 
 ## Boundary
