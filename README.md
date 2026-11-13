@@ -63,9 +63,15 @@ Variable layers (later wins): ancestor `template.vars` defaults
 (`extends` chain) → this pack's `template.vars` → auto vars
 (`repo`, `user`) → `--config` file (json/toml/yaml) →
 `TEMPLATE_VAR_<NAME>` env → trailing `key=value` args.
-`template.extends` names a parent pack by tamias ref; tamias
-materializes it at `.scarab-parent/` and the chain renders
-ancestor-first — children win on `into` conflicts.
+`template.extends` declares composition parents — a source string,
+a `{source, via}` table, or a list (lowest precedence first) — and
+`template.merge` declares merge semantics as data (`vars`, `into`,
+`max-depth`). The contract is agnostic (`scarab-template`'s
+`compose` module + `COMPOSITION.md`): sources are opaque locators a
+resolver interprets — tamias installs resolve `tamias-ref` sources
+and materialize parents at `.scarab-parent/` (one) or
+`.scarab-parents/<i>/` (several); the chain renders ancestor-first
+under the merge rules (default: children win on vars and `into`s).
 
 ```bash
 tamias install git:9aia/scarab//libraries/rust-repo   # the shipped example pack

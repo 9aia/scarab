@@ -19,17 +19,19 @@
 //!   `--config` vars file (a flat `name = value` map).
 //! - `capabilities` — `{"types": ["template"], "verbs": […]}`.
 //!
-//! **Composition (`template.extends`).** A pack may declare
-//! `template.extends: <ref>` naming a parent pack. The driver cannot
-//! fetch refs, so tamias resolves + materializes each ancestor's
-//! payload inside this one at `.scarab-parent/` during install —
-//! recursively, so a grandparent lands at
-//! `.scarab-parent/.scarab-parent/`. The chain renders
-//! ancestor-first: parent files write first, the child's last, so on
-//! an `into` conflict the **child wins**; distinct `into`s all
-//! render. `.scarab-parent/` present without `extends` is honored the
-//! same way (a vendored parent); `extends` declared but
-//! `.scarab-parent/` absent is an error — the pack must go through
+//! **Composition (`template.extends`).** A pack may declare parents
+//! it composes with — the agnostic contract lives in
+//! `scarab_template::compose` (see `scarab-template/COMPOSITION.md`).
+//! This driver is the *materialized-parent* evaluator: tamias
+//! resolves `tamias-ref` sources at install time and copies each
+//! parent's payload inside this one — `.scarab-parent/` for a single
+//! parent, `.scarab-parents/<i>/` (declaration order) for several —
+//! recursively, so a grandparent nests inside its parent. The chain
+//! is evaluated ancestor-first under the pack's `template.merge`
+//! rules (defaults: descendant vars win, descendant `into`s win).
+//! `.scarab-parent*/` present without `extends` is honored the same
+//! way (a vendored parent); `extends` declared but nothing
+//! materialized is an error — the pack must go through
 //! `tamias install`.
 //!
 //! Var context precedence (later wins): ancestor `template.vars`
@@ -47,7 +49,12 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use scarab_template::{PackTemplate, TemplateEngine, merge_context, safe_into, safe_src};
+use scarab_template::compose::{
+    ChainEntry, Extends, MergeRules, ParentLocator, VarsMerge, apply_into_policy, compose_chain,
+};
+use scarab_template::{
+    PackTemplate, TemplateEngine, TemplateError, merge_context, safe_into, safe_src,
+};
 use scarab_template_minijinja::MinijinjaEngine;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -174,66 +181,100 @@ fn load_pack(dir: &Path) -> Result<(PackTemplate, String)> {
     Ok((pack, name))
 }
 
-/// Payload subdir tamias materializes a resolved `template.extends`
-/// parent into — and where this driver looks for it.
+/// Payload subdir tamias materializes a single resolved
+/// `template.extends` parent into — and where this driver looks for
+/// it (the multi-parent layout is [`PARENTS_DIR`]).
 const PARENT_DIR: &str = ".scarab-parent";
+/// Payload subdir tamias materializes several `extends` parents into
+/// — one numbered child per declaration, in order.
+const PARENTS_DIR: &str = ".scarab-parents";
 
-/// One pack in an `extends` chain — its parsed `template:` table, its
-/// payload dir (the `into`-relative `src` root), and manifest name.
-#[derive(Debug)]
-struct ChainPack {
-    pack: PackTemplate,
-    dir: PathBuf,
-    name: String,
+/// The driver's [`ParentLocator`]: discovers parents already
+/// materialized inside the payload by tamias install —
+/// `.scarab-parents/<i>/` when present (multi-parent layout), else a
+/// lone `.scarab-parent/` (single-parent layout, also the vendored
+/// convention). The driver never resolves `source` locators itself;
+/// it only reads what install laid down.
+struct MaterializedLocator;
+
+impl ParentLocator for MaterializedLocator {
+    fn locate(
+        &self,
+        payload: &Path,
+        _extends: Option<&Extends>,
+    ) -> std::result::Result<Vec<PathBuf>, TemplateError> {
+        let multi = payload.join(PARENTS_DIR);
+        if multi.is_dir() {
+            let mut dirs: Vec<(usize, PathBuf)> = Vec::new();
+            for entry in std::fs::read_dir(&multi)
+                .map_err(|e| TemplateError::Compose(format!("{}: {e}", multi.display())))?
+            {
+                let entry = entry
+                    .map_err(|e| TemplateError::Compose(format!("{}: {e}", multi.display())))?;
+                if !entry.file_type().is_ok_and(|t| t.is_dir()) {
+                    continue;
+                }
+                let name = entry.file_name();
+                let Some(name) = name.to_str() else { continue };
+                let Ok(idx) = name.parse::<usize>() else {
+                    return Err(TemplateError::Compose(format!(
+                        "{}: non-numeric parent dir {name:?} — expected <index>/ payloads",
+                        multi.display()
+                    )));
+                };
+                dirs.push((idx, entry.path()));
+            }
+            dirs.sort_by_key(|(i, _)| *i);
+            return Ok(dirs.into_iter().map(|(_, p)| p).collect());
+        }
+        let single = payload.join(PARENT_DIR);
+        if single.is_dir() {
+            return Ok(vec![single]);
+        }
+        Ok(Vec::new())
+    }
 }
 
-/// Load the payload's pack plus every materialized ancestor, ordered
-/// **ancestor-first** (grandparent → … → parent → child) so callers
-/// render/apply in precedence order.
-///
-/// The chain is discovered purely on disk: each level's
-/// `.scarab-parent/` holds the next ancestor's payload (already
-/// composed by tamias — a grandparent sits at
-/// `.scarab-parent/.scarab-parent/`). `template.extends` declared but
-/// no `.scarab-parent/` means the payload never went through
-/// `tamias install` — the driver can't fetch refs, so that's an error.
-/// `.scarab-parent/` present without `extends` is honored as a
-/// vendored parent.
-fn load_chain(dir: &Path) -> Result<Vec<ChainPack>> {
-    let mut chain = Vec::new();
-    let mut cur = dir.to_path_buf();
-    loop {
-        let (pack, name) = load_pack(&cur)?;
-        if let Some(extends) = &pack.extends {
-            if extends.trim().is_empty() {
-                return Err(err(format!(
-                    "{}: template.extends is empty — expected a tamias ref",
-                    cur.join("tamias.yaml").display()
-                )));
-            }
-        }
-        let parent = cur.join(PARENT_DIR);
-        if pack.extends.is_some() && !parent.is_dir() {
-            return Err(err(format!(
-                "{}: template.extends is set but {PARENT_DIR}/ is not materialized — \
-                 install through `tamias install` so the parent payload lands inside the package",
-                cur.display()
-            )));
-        }
-        let has_parent = parent.is_dir();
-        chain.push(ChainPack {
-            pack,
-            dir: cur.clone(),
-            name,
-        });
-        if has_parent {
-            cur = parent;
-        } else {
-            break;
-        }
+/// The driver's [`PackLoader`] — wraps [`load_pack`] (manifest parse +
+/// `type: template` check) into the port's error type.
+struct DriverLoader;
+
+impl scarab_template::PackLoader for DriverLoader {
+    fn load(&self, dir: &Path) -> std::result::Result<(PackTemplate, String), TemplateError> {
+        load_pack(dir).map_err(|e| match e {
+            OpsError::Manifest(m) => TemplateError::Manifest(m),
+            OpsError::Template(t) => t,
+            other => TemplateError::Compose(other.to_string()),
+        })
     }
-    chain.reverse();
-    Ok(chain)
+}
+
+/// Load the payload's pack plus every materialized ancestor via the
+/// agnostic composition contract ([`compose_chain`]) — ancestor-first.
+/// `extends` declared but fewer/more parents materialized than
+/// declared fails with [`TemplateError::MissingParents`]; the error
+/// gets the operator-facing `tamias install` hint appended.
+fn load_chain(dir: &Path) -> Result<Vec<ChainEntry>> {
+    compose_chain(&DriverLoader, &MaterializedLocator, dir).map_err(|e| match e {
+        TemplateError::MissingParents {
+            declared,
+            found,
+            dir: d,
+        } => err(format!(
+            "extends declares {declared} parent(s) but {found} materialized under {d} — \
+             install through `tamias install` so the parent payload(s) land inside the package"
+        )),
+        other => OpsError::Template(other),
+    })
+}
+
+/// The merge rules governing this composition — the installing
+/// (root) pack's `template.merge`; the chain is ancestor-first so
+/// the root is last.
+fn merge_rules(chain: &[ChainEntry]) -> MergeRules {
+    chain
+        .last()
+        .map_or_else(MergeRules::default, |c| c.pack.merge)
 }
 
 /// Auto vars every pack sees (overridable by later layers).
@@ -277,10 +318,12 @@ fn auto_vars(dir: &Path) -> BTreeMap<String, serde_json::Value> {
 /// Var layers, later winning: ancestor `template.vars` defaults →
 /// … → this pack's `template.vars` → auto vars (`repo`, `user`) →
 /// `--config` file → `$TEMPLATE_VAR_<NAME>` env → trailing
-/// `key=value` args. `chain` is ancestor-first (see [`load_chain`]),
-/// so folding `vars` in order gives child defaults precedence over
-/// parent defaults.
-fn resolve_vars(chain: &[ChainPack], a: &Args, work_dir: &Path) -> Result<serde_json::Value> {
+/// `key=value` args. `chain` is ancestor-first (see
+/// [`compose_chain`]); the pack-vars fold direction follows the root
+/// pack's `merge.vars` — [`VarsMerge::ChildWins`] folds ancestor→
+/// descendant (descendant defaults win), [`VarsMerge::ParentWins`]
+/// folds descendant→ancestor (ancestor defaults win).
+fn resolve_vars(chain: &[ChainEntry], a: &Args, work_dir: &Path) -> Result<serde_json::Value> {
     let mut file_vars = BTreeMap::new();
     if let Some(cfg) = &a.config {
         let text = std::fs::read_to_string(cfg)?;
@@ -323,7 +366,11 @@ fn resolve_vars(chain: &[ChainPack], a: &Args, work_dir: &Path) -> Result<serde_
         );
     }
     let mut pack_vars = BTreeMap::new();
-    for cp in chain {
+    let ordered: Vec<&ChainEntry> = match merge_rules(chain).vars {
+        VarsMerge::ChildWins => chain.iter().collect(),
+        VarsMerge::ParentWins => chain.iter().rev().collect(),
+    };
+    for cp in ordered {
         for (k, v) in &cp.pack.vars {
             pack_vars.insert(k.clone(), v.clone());
         }
@@ -368,19 +415,21 @@ fn render_pack(
 }
 
 /// Render the whole `extends` chain against one context — ancestor
-/// packs first, the child last. Duplicate `into`s are kept in order:
-/// writing them sequentially makes the child overwrite the parent,
-/// and the state digest keeps only the final (child) content.
+/// packs first, the child last — then apply the root pack's
+/// `merge.into` policy ([`apply_into_policy`]). Under the default
+/// `child-wins` policy duplicate `into`s collapse to the descendant's
+/// render, so the state digest keeps only the final (child) content.
 fn render_chain(
-    chain: &[ChainPack],
+    chain: &[ChainEntry],
     ctx: &serde_json::Value,
     engine: &dyn TemplateEngine,
+    rules: &MergeRules,
 ) -> Result<Vec<(PathBuf, String)>> {
     let mut out = Vec::new();
     for cp in chain {
         out.extend(render_pack(&cp.pack, &cp.dir, ctx, engine)?);
     }
-    Ok(out)
+    Ok(apply_into_policy(out, rules.into)?)
 }
 
 fn target_dir(a: &Args) -> Result<PathBuf> {
@@ -404,11 +453,13 @@ fn install(a: &Args) -> Result<()> {
     let dir = required_dir(a)?;
     let chain = load_chain(&dir)?;
     let child = chain.last().map_or("?", |c| c.name.as_str());
+    let rules = merge_rules(&chain);
     let engine = MinijinjaEngine::new();
     // Auto vars describe the destination repo, not the pack payload.
     let ctx_dir = target_dir(a)?;
     let ctx = resolve_vars(&chain, a, &ctx_dir)?;
-    let rendered = render_chain(&chain, &ctx, &engine)?;
+    let rendered = render_chain(&chain, &ctx, &engine, &rules)?;
+    let total_files: usize = chain.iter().map(|c| c.pack.files.len()).sum();
     println!(
         "template: {child} — {} file(s) validated across {} pack(s) (engine: {})",
         rendered.len(),
@@ -419,17 +470,12 @@ fn install(a: &Args) -> Result<()> {
         let names: Vec<&str> = chain.iter().map(|c| c.name.as_str()).collect();
         println!("  extends chain: {}", names.join(" → "));
     }
-    let mut seen = std::collections::BTreeSet::new();
-    let mut overridden = 0usize;
     for (into, _) in &rendered {
-        if seen.insert(into.clone()) {
-            println!("  {}", into.display());
-        } else {
-            overridden += 1;
-        }
+        println!("  {}", into.display());
     }
+    let overridden = total_files.saturating_sub(rendered.len());
     if overridden > 0 {
-        println!("  ({overridden} file(s) overridden by a later pack in the chain)");
+        println!("  ({overridden} file(s) overridden by merge policy)");
     }
     Ok(())
 }
@@ -441,11 +487,12 @@ fn deploy(a: &Args) -> Result<()> {
     let name = chain
         .last()
         .map_or_else(|| "?".to_string(), |c| c.name.clone());
+    let rules = merge_rules(&chain);
     let engine = MinijinjaEngine::new();
     let target = target_dir(a)?;
     // Auto vars describe the destination repo, not the pack payload.
     let ctx = resolve_vars(&chain, a, &target)?;
-    let rendered = render_chain(&chain, &ctx, &engine)?;
+    let rendered = render_chain(&chain, &ctx, &engine, &rules)?;
     std::fs::create_dir_all(&target)?;
 
     let mut state = State {
@@ -776,7 +823,98 @@ mod tests {
         );
         std::fs::write(tmp.path().join("x.tmpl"), "x").unwrap();
         let err = load_chain(tmp.path()).unwrap_err().to_string();
-        assert!(err.contains(".scarab-parent"), "{err}");
+        assert!(err.contains("materialized"), "{err}");
+        assert!(err.contains("tamias install"), "{err}");
+    }
+
+    /// Write a `merge:` table into an existing pack manifest.
+    fn add_merge(dir: &Path, merge_yaml: &str) {
+        let path = dir.join("tamias.yaml");
+        let mut text = std::fs::read_to_string(&path).unwrap();
+        text.push_str("  merge:\n");
+        text.push_str(merge_yaml);
+        // merge must sit inside `template:` — append before files? The
+        // fixture writes files last, so merge lands after files: still
+        // inside the template table (same indent level).
+        std::fs::write(&path, text).unwrap();
+    }
+
+    #[test]
+    fn multi_parent_layout_renders_in_declaration_order() {
+        let tmp = tempfile::tempdir().unwrap();
+        // two independent parents materialized under .scarab-parents/
+        for (i, name) in ["base-a", "base-b"].iter().enumerate() {
+            let p = tmp.path().join(".scarab-parents").join(i.to_string());
+            write_pack(
+                &p,
+                name,
+                &format!("    who: {name}\n"),
+                "    - src: x.tmpl\n      into: x.txt\n",
+                None,
+            );
+            std::fs::write(p.join("x.tmpl"), "x={{ who }}").unwrap();
+        }
+        // child declares both parents, overrides x.txt
+        write_pack(
+            tmp.path(),
+            "child",
+            "    who: child\n",
+            "    - src: y.tmpl\n      into: y.txt\n    - src: x.tmpl\n      into: x.txt\n",
+            Some("[base-a, base-b]"),
+        );
+        std::fs::write(tmp.path().join("y.tmpl"), "y={{ who }}").unwrap();
+        std::fs::write(tmp.path().join("x.tmpl"), "child-x={{ who }}").unwrap();
+        let target = tempfile::tempdir().unwrap();
+        let a = Args {
+            dir: Some(tmp.path().to_path_buf()),
+            target: Some(target.path().to_path_buf()),
+            ..Args::default()
+        };
+        deploy(&a).unwrap();
+        // child wins the into conflict; its vars beat both parents'
+        assert_eq!(
+            std::fs::read_to_string(target.path().join("x.txt")).unwrap(),
+            "child-x=child"
+        );
+        assert_eq!(
+            std::fs::read_to_string(target.path().join("y.txt")).unwrap(),
+            "y=child"
+        );
+    }
+
+    #[test]
+    fn merge_into_error_fails_on_conflict() {
+        let (_tmp, child) = chain_fixture();
+        add_merge(&child, "    into: error\n");
+        let a = Args {
+            dir: Some(child),
+            target: Some(tempfile::tempdir().unwrap().path().to_path_buf()),
+            ..Args::default()
+        };
+        let err = deploy(&a).unwrap_err().to_string();
+        assert!(err.contains("into conflict"), "{err}");
+    }
+
+    #[test]
+    fn merge_vars_parent_wins_inverts_var_defaults() {
+        let (_tmp, child) = chain_fixture();
+        // parent sets who=parent; child doesn't set who but renders it.
+        // parent-wins: the ancestor default beats the descendant's.
+        add_merge(&child, "    vars: parent-wins\n");
+        let target = tempfile::tempdir().unwrap();
+        let a = Args {
+            dir: Some(child),
+            target: Some(target.path().to_path_buf()),
+            ..Args::default()
+        };
+        deploy(&a).unwrap();
+        // `shared` is still child-wins on into (default), but `who`
+        // resolves to the most-ancestral default (grandparent) under
+        // parent-wins vars.
+        assert_eq!(
+            std::fs::read_to_string(target.path().join("p.txt")).unwrap(),
+            "p gp gp"
+        );
     }
 
     #[test]

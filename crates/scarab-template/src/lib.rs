@@ -23,19 +23,30 @@
 //! `$TEMPLATE_TARGET`, or the caller's cwd). `uninstall` removes
 //! files still matching the recorded digests.
 //!
-//! **Composition (`template.extends`).** A pack may name a parent
-//! pack by tamias ref. Resolution is tamias-side — the driver cannot
-//! fetch refs — so `tamias install` materializes each parent's
-//! payload inside the child payload at `.scarab-parent/` (a parent
-//! that itself extends nests as `.scarab-parent/.scarab-parent/`,
-//! and so on). The driver renders the chain ancestor-first: parent
-//! `template.vars` are the lowest-precedence defaults, and on `into`
-//! conflicts the *child* wins (it renders last).
+//! **Composition (`template.extends`).** A pack may declare parents
+//! it composes with — one or many, as bare source strings or
+//! `{source, via}` tables — plus optional `template.merge` rules.
+//! The vocabulary and merge semantics are *agnostic data* defined in
+//! [`compose`] (see `COMPOSITION.md` for the spec a second evaluator
+//! can implement): scarab never parses a source grammar and never
+//! fetches anything. *Locating* parents is delegated to a
+//! [`compose::ParentLocator`] port — tamias installs materialize
+//! each parent's payload inside the child at `.scarab-parent/`
+//! (single) or `.scarab-parents/<i>/` (multiple), nested recursively;
+//! the driver renders the chain ancestor-first under the declared
+//! merge rules (default: descendant vars + `into`s win).
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
+
+pub mod compose;
+
+pub use compose::{
+    ChainEntry, Extends, IntoMerge, MergeRules, PackLoader, ParentDecl, ParentLocator, ParentSpec,
+    VarsMerge, apply_into_policy, compose_chain,
+};
 
 /// One template file in a pack — `src` inside the payload,
 /// `into` the render target (relative path, `..` rejected).
@@ -59,14 +70,17 @@ pub struct PackTemplate {
     /// values. Across an `extends` chain, ancestor defaults sit below
     /// descendant defaults (child wins).
     pub vars: BTreeMap<String, serde_json::Value>,
-    /// `template.extends` — a tamias ref naming a parent template
-    /// pack (`git:org/repo//path`, `cf:…`, a store name, …).
-    ///
-    /// The driver never resolves this itself: tamias materializes the
-    /// parent's payload at `.scarab-parent/` inside this payload
-    /// during install. `None`/absent = no parent. A non-string or
-    /// empty value fails manifest parsing/validation.
-    pub extends: Option<String>,
+    /// `template.extends` — the pack's declared composition parents
+    /// (see [`Extends`]). Sources are opaque locators whose grammar
+    /// belongs to the resolver (`via` selects the scheme); scarab
+    /// never interprets them. `None`/absent = no declared parents.
+    pub extends: Option<Extends>,
+    /// `template.merge` — declared merge semantics as data (var
+    /// precedence, `into` conflict policy, depth cap). Absent =
+    /// defaults: descendant vars win, descendant `into`s win,
+    /// 8-deep cap. See `COMPOSITION.md`.
+    #[serde(default)]
+    pub merge: MergeRules,
 }
 
 /// Errors from pack parsing and path safety — render errors are the
@@ -86,6 +100,24 @@ pub enum TemplateError {
     /// Render produced bytes that aren't valid UTF-8 text.
     #[error("rendered output for {0} is not valid UTF-8")]
     NotUtf8(String),
+    /// Pack composition failed — malformed `extends`, locator or
+    /// loader errors, depth-cap breaches, merge-policy conflicts.
+    #[error("composition: {0}")]
+    Compose(String),
+    /// `extends` declared more/fewer parents than the locator
+    /// materialized — the payload never went through its composition
+    /// source's install (e.g. `tamias install`).
+    #[error(
+        "extends declares {declared} parent(s) but {found} materialized payload(s) found under {dir}"
+    )]
+    MissingParents {
+        /// Parents the manifest declares.
+        declared: usize,
+        /// Parent payload dirs the locator found.
+        found: usize,
+        /// The pack payload dir that was walked.
+        dir: String,
+    },
 }
 
 /// The template engine port — one impl per syntax family. The
