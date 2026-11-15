@@ -6,7 +6,7 @@
 //! - `test`     — `cargo nextest run` when installed, else `cargo test`
 //! - `coverage` — `cargo llvm-cov` (HTML → target/llvm-cov/html);
 //!   extra args pass through, e.g. `--fail-under-lines 97`
-//! - `install`  — release-install `scarab` into ~/.cargo/bin
+//! - `install`  — release-install `tamias-driver-template` into ~/.cargo/bin
 //! - `package`  — `cargo package --workspace` (verify: builds each packaged crate)
 //! - `smoke`    — install `scarab` from crates.io + run it (post-publish check)
 //! - `site`     — build the docs site (docs/ worktree, VitePress)
@@ -104,7 +104,13 @@ fn main() {
                 std::process::exit(1)
             }
         }
-        "install" => run(&["cargo", "install", "--path", "crates/scarab-cli", "--force"]),
+        "install" => run(&[
+            "cargo",
+            "install",
+            "--path",
+            "crates/tamias-driver-template",
+            "--force",
+        ]),
         "package" => run(&["cargo", "package", "--workspace", "--allow-dirty"]),
         "smoke" => {
             eprintln!("xtask: smoke not wired yet (needs crates.io publish)");

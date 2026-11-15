@@ -21,7 +21,7 @@ type); `-file`/`-toml`/`-yaml` are the impls.
 | `crates/scarab-template` | template port — `TemplateEngine` trait, `PackTemplate` model, `merge_context`, safe-path validation, and the agnostic composition contract (`compose`: `Extends`/`ParentDecl`/`MergeRules` + `compose_chain`/`apply_into_policy` + `PackLoader`/`ParentLocator` ports — spec in `COMPOSITION.md`) |
 | `crates/scarab-template-minijinja` | MiniJinja `TemplateEngine` impl — `{{ }}` vars + `{% %}` blocks, sandboxed |
 | `crates/tamias-driver-template` | `type: template` content driver — install validates, deploy renders pack payloads (incl. `extends` chains via the materialized-parent locator) to target paths, uninstall removes |
-| `xtask` (`scarab-xtask`) | check / test / coverage / package / site — `install`/`smoke` are stubs (`install` points at absent `crates/scarab-cli`, `smoke` exits 1) |
+| `xtask` (`scarab-xtask`) | check / test / coverage / install / package / site — `smoke` is a stub (exits 1; needs crates.io publish) |
 
 ## Boundary
 
@@ -38,11 +38,10 @@ type); `-file`/`-toml`/`-yaml` are the impls.
 cargo xtask check          # fmt + clippy -D warnings
 cargo xtask test           # whole suite (nextest if present)
 cargo xtask coverage       # llvm-cov report; extra args pass through
+cargo xtask install        # release-install tamias-driver-template → ~/.cargo/bin
 cargo xtask package        # cargo package --workspace (verify)
 cargo xtask smoke          # stub — not wired yet (needs crates.io publish)
 cargo xtask site           # build the docs site (needs docs/ worktree)
-# `cargo xtask install` exists but is broken — targets absent
-# crates/scarab-cli; there is no scarab binary to install.
 ```
 
 Git hooks live in `.hooks/` (`core.hooksPath` = `.hooks`).
