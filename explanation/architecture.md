@@ -21,13 +21,18 @@ scarab-config-toml / scarab-config-yaml
 ```
 
 * `scarab-config` is pure: traits, the `Discovery` spec, path
-  helpers — no I/O, no formats, no models.
+  helpers, and the JSON merge half (`merge_value` /
+  `apply_overrides`) — no I/O, no formats, no models.
 * `scarab-config-file` is the discovery impl every org repo
-  copy-pasted: explicit path → env var → search dirs, extension
-  dispatch across a format list.
+  copy-pasted: `FileSource` picks the *first* matching file;
+  `LayeredFileSource` merges *every* dir's file plus explicit/override
+  layers into one `T`. Both dispatch by extension across a format
+  list.
 * `scarab-config-toml` / `-yaml` own only syntax — serde
   parse/render over any `T`. Formats are separate crates so a
-  consumer can carry just the syntax it wants.
+  consumer can carry just the syntax it wants. Layered loading parses
+  each layer as `serde_json::Value` through the same blanket impls,
+  so `T` itself never needs `Serialize`.
 
 Generic-over-`T` is the load-bearing decision: one `FileSource`
 serves `myco`, `tamias`, `tarsi`, and every future repo because the
@@ -58,11 +63,15 @@ scarab-template-minijinja ── the one engine impl (v1)
 * `scarab-template` holds the pack model and path safety — pure
   domain, engine-agnostic. `merge_context` defines layer precedence;
   `safe_into`/`safe_src` define what "inside the target" means.
+  `template.extends` composes packs: tamias materializes each
+  ancestor's payload at `.scarab-parent/`, and the driver renders
+  the chain ancestor-first so children override parents on `into`
+  conflicts — inheritance without a fetch capability in the driver.
 * `tamias-driver-template` is where I/O lives: manifest loading,
-  var resolution (pack defaults → auto → file → env → args),
-  render+write, digest state. It implements the tamias driver
-  contract, so packs distribute through tamias like every other
-  content type — no bespoke install path.
+  chain walking, var resolution (ancestor defaults → pack defaults
+  → auto → file → env → args), render+write, digest state. It
+  implements the tamias driver contract, so packs distribute through
+  tamias like every other content type — no bespoke install path.
 * `scarab-template-minijinja` is deliberately the only engine:
   minijinja is small, sandboxed by construction, and its
   `{{ }}`/`{% %}` syntax covers config-file templating without a
@@ -90,5 +99,9 @@ state) stay local.
 * **Uninstall is digest-exact.** Only files still matching their
   recorded sha256 are removed; user edits are preserved and
   reported.
+* **Layers merge as JSON, not as `T`.** `LayeredFileSource` folds
+  `serde_json::Value` trees — objects key-wise, scalars/arrays
+  replace — before one final deserialize, so merge semantics stay
+  format- and model-agnostic.
 * **Secrets stay names.** Config surfaces carry secret *names*,
   never values — cuora owns the values.

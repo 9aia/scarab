@@ -14,6 +14,7 @@ generic config loading and templated content packs — the seal that validates w
 
 - [How-to guides](/scarab/how-to.md)
 - [Customize config discovery](/scarab/how-to/customize-config-discovery.md)
+- [Layer configs from several files](/scarab/how-to/layered-config.md)
 - [Write a template pack](/scarab/how-to/write-a-template-pack.md)
 - [Deploy a template pack](/scarab/how-to/deploy-a-template-pack.md)
 
@@ -23,6 +24,7 @@ generic config loading and templated content packs — the seal that validates w
 - [Config port](/scarab/reference/config-port.md)
 - [Template packs](/scarab/reference/template-packs.md)
 - [Template driver](/scarab/reference/driver.md)
+- [Testkit](/scarab/reference/testkit.md)
 
 ### Explanation
 

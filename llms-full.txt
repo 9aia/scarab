@@ -56,6 +56,8 @@ search specs.
 
 ## Next steps
 
+* [Layer configs from several files](/how-to/layered-config) — merge
+  `~/.config/<name>/` with a project file instead of first-match.
 * [Write a template pack](/how-to/write-a-template-pack) — ship
   rendered config files as a tamias `type: template` package.
 * [Deploy a template pack](/how-to/deploy-a-template-pack) — the
@@ -69,6 +71,7 @@ url: /scarab/how-to.md
 # How-to guides
 
 * [Customize config discovery](customize-config-discovery.md)
+* [Layer configs from several files](layered-config.md)
 * [Write a template pack](write-a-template-pack.md)
 * [Deploy a template pack](deploy-a-template-pack.md)
 
@@ -163,6 +166,98 @@ let cfg = src.load_with(&|k| (k == "MYAPP_CONFIG").then(|| "/tmp/x.yaml".into())
 ---
 
 ---
+url: /scarab/how-to/layered-config.md
+---
+# Layer configs from several files
+
+`FileSource` picks the *first* matching file — one config wins, the
+rest are ignored. `LayeredFileSource` is the merge counterpart: it
+collects **one file per search dir**, folds them into a single
+`serde_json::Value` tree, applies programmatic overrides, and
+deserializes into your model. Use it when a base config (say,
+`~/.config/myapp/myapp.yaml`) should be *overridden* by a project or
+environment file rather than replaced by it.
+
+## Swap the source
+
+```rust
+use scarab_config_file::LayeredFileSource;
+
+// same Discovery conventions as FileSource::for_app
+let cfg: MyConfig = LayeredFileSource::for_app("myapp").load()?;
+```
+
+Under `Discovery::for_app` the dirs are `[".", "~/.config/myapp"]`
+and the **last dir is the base**: `~/.config/myapp/myapp.yaml`
+loads first, `./myapp.yaml` merges over it. Within each dir only the
+preferred file counts — `myapp.yaml` beats `myapp.yml` beats
+`myapp.toml`, and the losers are not merged.
+
+## Precedence, lowest to highest
+
+1. `<dir>/<name>.<ext>` per search dir, last dir first
+2. the explicit path / `$<NAME>_CONFIG` file — merged **on top** of
+   every dir layer (unlike `FileSource`, where it replaces discovery)
+3. `overrides` — flat dotted-path keys, the highest layer
+
+```rust
+use scarab_config_file::LayeredFileSource;
+use serde_json::json;
+use std::collections::BTreeMap;
+
+let mut src = LayeredFileSource::<MyConfig>::for_app("myapp");
+src.explicit = Some("./deploy/prod.yaml".into()); // top file layer
+src.overrides = BTreeMap::from([
+    ("server.port".to_string(), json!(8443)),
+    ("server.tls.enabled".to_string(), json!(true)),
+]);
+let cfg = src.load()?;
+```
+
+## Merge semantics
+
+Layers merge as `serde_json::Value`, never on your typed model —
+`MyConfig` only needs `DeserializeOwned` (no `Serialize`).
+`merge_value` does the folding:
+
+* **objects merge key-wise, recursively** — a key the overlay omits
+  survives from the base
+* **scalars, arrays, and null replace** — arrays never concatenate;
+  set `[c]` over `[a, b]` and you get `[c]`
+
+Each layer file must parse to a mapping — a top-level array or
+scalar is an error naming the path (`config layer is not a
+mapping`). Mixed formats across dirs are fine: a TOML user config
+under a YAML project config merges cleanly. A parse error names the
+file it came from.
+
+## Inspect the layers
+
+`layer_paths()` returns the resolved layer paths in merge order
+(lowest precedence first) — handy for logging what will be merged:
+
+```rust
+for p in src.layer_paths()? {
+    println!("layer: {}", p.display());
+}
+```
+
+`parse_layer(path)` parses one file into a `serde_json::Value` if
+you need to inspect or transform a layer yourself; `load_with(env)`
+takes the same injected env lookup as `FileSource` for tests.
+
+## When not to layer
+
+* You want "one file wins, done" — that's `FileSource`; don't pay
+  for a merge you don't need.
+* Your model can't round-trip through `serde_json::Value` — e.g. it
+  deserializes from a non-self-describing format lossily. The merge
+  happens on JSON, so exotic serde attributes (`#[serde(with)]`,
+  borrowed data) may not survive the intermediate `Value`.
+
+---
+
+---
 url: /scarab/how-to/write-a-template-pack.md
 ---
 # Write a template pack
@@ -190,7 +285,7 @@ version: "0.1.0"
 
 template:
   vars:
-    env: dev            # defaults — lowest-precedence layer
+    env: dev # defaults — lowest-precedence layer
   files:
     - src: app.toml.tmpl
       into: ./config/app.toml
@@ -221,11 +316,37 @@ repo = "{{ repo }}"
 user = "{{ user }}"
 ```
 
+## Inherit from a parent pack
+
+`template.extends` names another template pack by tamias ref — the
+child renders the parent's files too, with the child's `into`s and
+`vars` winning:
+
+```yaml
+template:
+  extends: git:9aia/scarab//libraries/rust-repo
+  vars:
+    channel: nightly # overrides the parent's "stable" default
+  files:
+    - src: extra.toml.tmpl
+      into: ./extra.toml
+```
+
+`tamias install` resolves the ref and materializes the parent's
+payload inside yours at `.scarab-parent/` (recursively for
+grandparents). The driver renders ancestor-first: parent files
+write first, yours last — on an `into` conflict **you win**, and the
+state digest records your version. See
+[template packs — composition](/reference/template-packs#composition)
+for the full contract, including the vendored-parent case
+(`.scarab-parent/` present without `extends`).
+
 ## Variable layers
 
 Later layers win:
 
-1. `template.vars` pack defaults
+1. ancestor `template.vars` defaults (extends chain, ancestor-first),
+   then this pack's `template.vars`
 2. auto vars — `repo` (git remote basename or dir name of the target
    repo) and `user` (`$USER`/`$LOGNAME`)
 3. `--config` vars file (JSON / TOML / YAML by extension)
@@ -257,7 +378,8 @@ against a local payload dir.
 ## Via tamias
 
 ```bash
-tamias install git:9aia/scarab//libraries/repo-bootstrap
+# the shipped example pack — starter configs for a new Rust workspace
+tamias install git:9aia/scarab//libraries/rust-repo
 ```
 
 Tamias calls the driver's `install` verb for validation, then
@@ -271,13 +393,18 @@ tamias-driver-template <verb> --dir <payload> --name <pkg> \
     [--config <vars-file>] [--target <dir>] [--dry-run] [key=value …]
 ```
 
-| Verb | What it does |
-| --- | --- |
-| `install` | Validate the pack and preview the render plan. Writes nothing. |
-| `deploy` | Render each `template.files[]` entry and write it at `into` under the target dir. |
-| `uninstall` | Remove files still matching the recorded sha256 digests. |
-| `config-schema` | Print the JSON Schema for the `--config` vars file. |
-| `capabilities` | Print `{"types": ["template"], "verbs": […]}` — the discovery probe. |
+| Verb            | What it does                                                                                                    |
+| --------------- | --------------------------------------------------------------------------------------------------------------- |
+| `install`       | Validate the pack and preview the render plan. Writes nothing.                                                  |
+| `deploy`        | Render each `template.files[]` entry and write it at `into` under the target dir.                               |
+| `uninstall`     | Remove files still matching the recorded sha256 digests.                                                        |
+| `config-schema` | Print the JSON Schema for the `--config` vars file.                                                             |
+| `capabilities`  | Print `{"name": "template", "types": ["template"], "verbs": […], "engine": "minijinja"}` — the discovery probe. |
+
+On an `extends` chain, `install`/`deploy` render every ancestor pack
+inside `.scarab-parent/` first — the child's files win on `into`
+conflicts. See
+[template packs — composition](/reference/template-packs#composition).
 
 ## Choosing the target dir
 
@@ -289,7 +416,8 @@ tamias-driver-template <verb> --dir <payload> --name <pkg> \
 
 ## Overriding variables
 
-Vars resolve in layers (later wins): pack `template.vars` → auto vars
+Vars resolve in layers (later wins): ancestor `template.vars`
+defaults (extends chain) → this pack's `template.vars` → auto vars
 (`repo`, `user`) → `--config` file → `$TEMPLATE_VAR_<NAME>` env →
 `key=value` args.
 
@@ -322,9 +450,10 @@ url: /scarab/reference.md
 ---
 # Reference
 
-* [Config port](config-port.md) — `ConfigSource`/`ConfigFormat` traits, `Discovery`, `FileSource`
-* [Template packs](template-packs.md) — `template:` manifest schema, var context, safe paths
+* [Config port](config-port.md) — `ConfigSource`/`ConfigFormat` traits, `Discovery`, `FileSource`, `LayeredFileSource`
+* [Template packs](template-packs.md) — `template:` manifest schema, var context, safe paths, `extends` chains
 * [Template driver](driver.md) — `tamias-driver-template` argv contract, state file
+* [Testkit](testkit.md) — `scarab-testkit` conformance suites + golden fixtures
 
 ---
 
@@ -351,10 +480,10 @@ pub trait ConfigFormat<T>: Send + Sync {
 }
 ```
 
-| Impl | Crate | Claims |
-| --- | --- | --- |
+| Impl         | Crate                | Claims                        |
+| ------------ | -------------------- | ----------------------------- |
 | `YamlFormat` | `scarab-config-yaml` | `yaml`, `yml` (in that order) |
-| `TomlFormat` | `scarab-config-toml` | `toml` |
+| `TomlFormat` | `scarab-config-toml` | `toml`                        |
 
 `scarab_config::format_for(path, formats)` returns the format
 claiming `path`'s extension, or `None`.
@@ -362,19 +491,20 @@ claiming `path`'s extension, or `None`.
 ## `ConfigSource<T>`
 
 Source-level: `load() -> Result<T, String>`. Impls compose formats —
-`scarab-config-file`'s `FileSource` is the discovery + dispatch impl;
-env/remote sources are new impls of the same trait.
+`scarab-config-file`'s `FileSource` (first-match) and
+`LayeredFileSource` (merge-all) are the file-backed impls; env/remote
+sources are new impls of the same trait.
 
 ## `Discovery`
 
 The shared search spec every file-backed source uses. Nothing is
 hardcoded per app — basename, env var, and dirs are caller-supplied.
 
-| Field | Meaning |
-| --- | --- |
-| `name` | Config file basename — `myco` → `myco.yaml`, `myco.yml`, `myco.toml` |
+| Field     | Meaning                                                                               |
+| --------- | ------------------------------------------------------------------------------------- |
+| `name`    | Config file basename — `myco` → `myco.yaml`, `myco.yml`, `myco.toml`                  |
 | `env_var` | Env var naming an explicit config file (`$MYCO_CONFIG`); `None` disables the env step |
-| `dirs` | Directories searched in order for `<name>.<ext>`; `~` expands via `expand_tilde` |
+| `dirs`    | Directories searched in order for `<name>.<ext>`; `~` expands via `expand_tilde`      |
 
 Constructors and builders:
 
@@ -389,11 +519,11 @@ Constructors and builders:
 File-backed `ConfigSource`: discovery + extension dispatch over a set
 of `ConfigFormat<T>`s.
 
-| Field | Meaning |
-| --- | --- |
-| `discovery` | Where to search |
-| `explicit` | Explicit `--config`-style path; wins over `discovery.env_var` |
-| `formats` | Syntax formats in preference order |
+| Field       | Meaning                                                       |
+| ----------- | ------------------------------------------------------------- |
+| `discovery` | Where to search                                               |
+| `explicit`  | Explicit `--config`-style path; wins over `discovery.env_var` |
+| `formats`   | Syntax formats in preference order                            |
 
 Constructors:
 
@@ -404,6 +534,54 @@ Constructors:
 
 Requires `T: DeserializeOwned + Serialize` for `new`/`for_app` (the
 `ConfigSource` impl bound).
+
+## `LayeredFileSource<T>`
+
+The merge counterpart, in `scarab-config-file`. Where `FileSource`
+picks the *first* existing file, `LayeredFileSource` collects **one
+file per search dir** (same per-dir preference rules), folds them
+low→high precedence into a `serde_json::Value` tree, applies
+programmatic dotted-path overrides, then deserializes into `T`.
+Formats are held as `ConfigFormat<serde_json::Value>` — layers merge
+as JSON, so `T` only needs `DeserializeOwned` (no `Serialize`).
+
+| Field       | Meaning                                                                                                               |
+| ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| `discovery` | Where to search — same `Discovery` spec                                                                               |
+| `explicit`  | Explicit path — the **top file layer**, merged over all dir layers (unlike `FileSource`, where it replaces discovery) |
+| `formats`   | Syntax formats over `serde_json::Value`, in preference order                                                          |
+| `overrides` | `BTreeMap<String, Value>` — flat dotted-path keys (`"server.port"`), the highest layer                                |
+
+Constructors mirror `FileSource`: `new(discovery)`, `for_app(name)`,
+`with_formats(discovery, formats)`, `standard_formats()`.
+
+Precedence, lowest to highest:
+
+1. `<dir>/<name>.<ext>` per dir, **last dir first** — under
+   `Discovery::for_app` (`[".", "~/.config/<name>"]`) the user config
+   is the base and `./<name>.yaml` overrides it
+2. the explicit path / `$<NAME>_CONFIG` file
+3. `overrides` — dotted-path leaf values
+
+Methods: `layer_paths()` / `layer_paths_with(env)` (merge order,
+lowest first), `parse_layer(path)` (one file → `Value`; a non-mapping
+document is an error), `load()` / `load_with(env)`. Same
+`load_with` env-injection seam as `FileSource` for tests. See
+[how-to: layered config](/how-to/layered-config) for the merge
+semantics and a worked example.
+
+## Merge helpers
+
+Pure functions in `scarab-config` — the half of layered loading that
+never touches the filesystem:
+
+* `merge_value(base, overlay)` — recursive JSON merge: objects merge
+  key-wise (overlay wins per key, recursing into shared objects);
+  scalars, arrays, and null **replace** — arrays never concatenate
+* `apply_overrides(base, overrides)` — flat dotted-path keys
+  (`"server.port" → 8080`) set leaves, creating intermediate objects;
+  a scalar sitting where a path needs to descend is replaced by an
+  object. Call after the file layers are merged
 
 ## Resolution order
 
@@ -450,12 +628,13 @@ type: template
 version: "0.1.0"
 
 template:
-  vars:                      # optional — flat name → JSON value map
+  vars: # optional — flat name → JSON value map
     env: dev
     replicas: 1
-  files:                     # required, non-empty
-    - src: app.toml.tmpl     # path inside the pack payload
-      into: ./config/app.toml  # render target, relative to target dir
+  extends: git:9aia/base//libraries/base-pack # optional — parent pack ref
+  files: # required, non-empty
+    - src: app.toml.tmpl # path inside the pack payload
+      into: ./config/app.toml # render target, relative to target dir
 ```
 
 ### `template.vars`
@@ -466,15 +645,47 @@ templates see them as engine-native values.
 
 ### `template.files[]`
 
-| Field | Meaning |
-| --- | --- |
-| `src` | Template path inside the payload root |
+| Field  | Meaning                                          |
+| ------ | ------------------------------------------------ |
+| `src`  | Template path inside the payload root            |
 | `into` | Render target, relative to the deploy target dir |
 
 `into` must normalize to a non-empty relative path — absolute paths,
 `..`, root/prefix components, and empty results are
 `TemplateError::UnsafeTarget`. `src` follows the same rule inside the
 payload (`TemplateError::UnsafeSource`).
+
+### `template.extends`
+
+Optional tamias ref naming a **parent template pack**
+(`git:org/repo//path`, `cf:…`, a store name, …). The driver never
+resolves refs itself — resolution is tamias-side. See
+[Composition](#composition) below.
+
+## Composition (`extends` chains)
+
+A pack may inherit from another template pack. `tamias install`
+resolves `template.extends` and materializes each ancestor's payload
+inside the child's at `.scarab-parent/` — recursively, so a
+grandparent lands at `.scarab-parent/.scarab-parent/`, and so on.
+
+The driver then renders the chain **ancestor-first**:
+
+* parent `template.vars` are the lowest-precedence defaults —
+  folding vars ancestor→child means the child's defaults win
+* parent files write first, the child's last — on an `into`
+  conflict the **child wins**; distinct `into`s all render
+* the state file records only the final (child) digest for a
+  contested path, which is exactly what `uninstall` needs
+
+Edge cases:
+
+* `.scarab-parent/` present **without** `extends` is honored as a
+  vendored parent — useful for local composition and tests
+* `extends` declared but `.scarab-parent/` absent is an error: the
+  payload never went through `tamias install`, and the driver can't
+  fetch refs
+* `extends: ""` (empty) fails manifest validation
 
 ## `TemplateEngine`
 
@@ -499,12 +710,16 @@ files stay POSIX-clean.
 `name → JSON value` layers, later winning:
 
 ```
-template.vars  <  auto vars  <  --config file  <  env+args
+ancestor template.vars … this pack's template.vars
+    <  auto vars  <  --config file  <  env+args
 ```
 
-The driver (`tamias-driver-template`) supplies the layers:
+On an `extends` chain the driver folds every ancestor's
+`template.vars` into `defaults` ancestor-first, so nearer packs win.
+The driver supplies the layers:
 
-1. `template.vars` pack defaults
+1. `template.vars` pack defaults — every ancestor's folded
+   ancestor-first, then this pack's (nearest wins)
 2. auto vars — `repo` (git `remote.origin.url` basename of the target
    dir, else canonical dir name) and `user` (`$USER`/`$LOGNAME`)
 3. `--config` file — JSON by `.json`, TOML by `.toml`, YAML otherwise
@@ -516,12 +731,12 @@ The driver (`tamias-driver-template`) supplies the layers:
 
 ## Errors
 
-| Variant | Meaning |
-| --- | --- |
-| `Manifest` | Pack manifest or `template:` table failed to parse |
-| `UnsafeTarget` | `into` escaped the deploy dir |
-| `UnsafeSource` | `src` escaped the payload root |
-| `NotUtf8` | Rendered output isn't valid UTF-8 text |
+| Variant        | Meaning                                            |
+| -------------- | -------------------------------------------------- |
+| `Manifest`     | Pack manifest or `template:` table failed to parse |
+| `UnsafeTarget` | `into` escaped the deploy dir                      |
+| `UnsafeSource` | `src` escaped the payload root                     |
+| `NotUtf8`      | Rendered output isn't valid UTF-8 text             |
 
 ---
 
@@ -544,27 +759,44 @@ tamias-driver-template <verb> --dir <payload> --name <pkg> \
     [--config <vars-file>] [--target <dir>] [--dry-run] [key=value …]
 ```
 
-| Flag | Meaning |
-| --- | --- |
-| `--dir` | Pack payload dir (contains `tamias.yaml`/`.yml`) — required for install/deploy/uninstall |
-| `--name` | Package name — required for install/deploy/uninstall |
-| `--config` | Vars file — JSON/TOML/YAML by extension, YAML default |
-| `--target` | Deploy target dir — overrides `$TEMPLATE_TARGET` and cwd |
-| `--dry-run` | Print actions without writing (deploy/uninstall) |
-| `key=value` | Trailing var overrides, highest-precedence layer |
+| Flag        | Meaning                                                                                  |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| `--dir`     | Pack payload dir (contains `tamias.yaml`/`.yml`) — required for install/deploy/uninstall |
+| `--name`    | Package name — required for install/deploy/uninstall                                     |
+| `--config`  | Vars file — JSON/TOML/YAML by extension, YAML default                                    |
+| `--target`  | Deploy target dir — overrides `$TEMPLATE_TARGET` and cwd                                 |
+| `--dry-run` | Print actions without writing (deploy/uninstall)                                         |
+| `key=value` | Trailing var overrides, highest-precedence layer                                         |
 
 ## Verbs
 
-| Verb | Behavior | Exit |
-| --- | --- | --- |
-| `install` | Validate manifest + every `src` compiles + vars resolve; print render plan. Writes nothing — the payload dir is the evictable fetch cache. | 0 / 1 / 2 |
-| `deploy` | Render each `template.files[]` entry, write at `into` under target dir, record state. | 0 / 1 / 2 |
-| `uninstall` | Remove files still matching recorded sha256 digests; modified files kept + reported. | 0 / 1 / 2 |
-| `config-schema` | Print JSON Schema (draft 2020-12) for the `--config` vars file — a flat `name = value` map. | 0 |
-| `capabilities` | Print `{"name": "template", "types": ["template"], "verbs": ["install","deploy","uninstall","config-schema"], "engine": "minijinja"}`. | 0 |
+| Verb            | Behavior                                                                                                                                                                           | Exit      |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `install`       | Validate the pack *chain* (each manifest parses, every `src` compiles, vars resolve); print the merged render plan. Writes nothing — the payload dir is the evictable fetch cache. | 0 / 1 / 2 |
+| `deploy`        | Render each `template.files[]` entry across the whole `extends` chain (ancestors first — the child wins on `into` conflicts), write at `into` under target dir, record state.      | 0 / 1 / 2 |
+| `uninstall`     | Remove files still matching recorded sha256 digests; modified files kept + reported.                                                                                               | 0 / 1 / 2 |
+| `config-schema` | Print JSON Schema (draft 2020-12) for the `--config` vars file — a flat `name = value` map.                                                                                        | 0         |
+| `capabilities`  | Print `{"name": "template", "types": ["template"], "verbs": ["install","deploy","uninstall","config-schema"], "engine": "minijinja"}`.                                             | 0         |
 
 Exit codes: `0` success, `1` operational error (message on stderr —
 tamias wraps it as `driver … failed: …`), `2` usage/arg error.
+
+## `extends` chains
+
+`install` and `deploy` walk the pack's chain: each level's payload
+may nest its parent at `.scarab-parent/` (materialized by
+`tamias install` from `template.extends`). `uninstall` needs no
+chain — it reverses whatever the state file recorded.
+
+* `install` reports the merged plan — every pack's `into`s in render
+  order, with a count of files overridden by a later pack
+* `deploy` renders ancestor-first; on an `into` conflict the child
+  (later pack) writes last and its digest is what state records
+* `extends` declared but `.scarab-parent/` missing → error ("install
+  through `tamias install`"); `.scarab-parent/` present without
+  `extends` → honored as a vendored parent
+* var layers fold ancestor `template.vars` first, so nearer packs
+  win — see [template packs](/reference/template-packs#composition)
 
 ## State file
 
@@ -595,6 +827,111 @@ All failures surface as `OpsError` — a readable message on stderr:
 * missing/unreadable payload files, render failures
 * malformed `--config` vars file (must parse to a map)
 * I/O errors on read/write/remove
+
+---
+
+---
+url: /scarab/reference/testkit.md
+---
+# Testkit
+
+`scarab-testkit` is the behavioral backbone for the config ports:
+conformance suites any implementation runs to prove itself, plus
+committed golden fixtures. Same pattern as `sepia-testkit` /
+`tamias-testkit`. Dev-dependency only — it never ships in a
+consumer's binary.
+
+```toml
+[dev-dependencies]
+scarab-testkit = "0.1"
+```
+
+## Format conformance
+
+`assert_config_format_conformance(format, &FormatCase)` checks a
+\[`ConfigFormat`] against one scenario:
+
+* extensions are claimed, non-empty, and unique
+* `parse(text)` produces `expected`
+* `render(expected)` re-parses to `expected` (round-trip)
+* every `bad_inputs` entry fails with `Err` — never a panic
+
+```rust
+use scarab_config_yaml::YamlFormat;
+use scarab_testkit::{FormatCase, assert_config_format_conformance};
+
+assert_config_format_conformance(
+    &YamlFormat,
+    &FormatCase::new("app.yaml", "name: app\nport: 8080\n", cfg)
+        .bad(["name: [unclosed"]),
+);
+```
+
+## Discovery conformance
+
+`assert_discovery_conformance(&case, make)` scripts a whole
+filesystem + env scenario into a temp dir — files, search dirs,
+env vars (paths resolve against the case root), an optional
+explicit path — then runs `load_with_env` on whatever source `make`
+builds from the \[`PreparedCase`]. The env lookup is injected; the
+process environment is never touched.
+
+```rust
+use scarab_testkit::{DiscoveryCase, assert_discovery_conformance};
+
+let case = DiscoveryCase::loaded("yaml beats toml", expected)
+    .file("myapp.toml", "name = \"toml\"\n")
+    .file("myapp.yaml", "name: yaml\n")
+    .dir(".");
+assert_discovery_conformance(&case, |pc| FileSource::new(
+    Discovery::bare("myapp").dirs(pc.dirs().to_vec()),
+));
+```
+
+`DiscoveryCase::error(name, needle)` expects a failure whose message
+contains `needle`. Works for `FileSource`, `LayeredFileSource`, and
+any future source implementing \[`EnvAwareSource`] (`load_with_env`).
+
+## Source contract
+
+For sources needing no injected env:
+`assert_config_source_conformance(source, &expected)` and
+`assert_config_source_error(source, "needle")` cover the minimal
+\[`ConfigSource`] contract.
+
+## Merge conformance
+
+The pure half of layered loading — run once against
+`scarab_config::{merge_value, apply_overrides}` themselves, or
+against your own merge impl:
+
+* `assert_merge_value_conformance(&[MergeCase])` — objects merge
+  key-wise recursively; scalars/arrays/null replace; arrays never
+  concatenate
+* `assert_apply_overrides_conformance(&[OverrideCase])` — dotted-path
+  leaves set in place, intermediate objects materialized
+
+## Template engine conformance
+
+`assert_template_engine_conformance(engine, &[TemplateCase])` is
+engine-agnostic — cases carry source + JSON context + expected
+output *or* expected error; only success/failure is contracted,
+never error text. `TemplateCase::output` / `::error` build cases;
+`assert_template_renders(engine, src, ctx, expected)` is the
+one-off assertion.
+
+## Fixtures and the canonical model
+
+* `fixture_path(rel)` / `fixture_text(rel)` — committed golden files
+  under `scarab-testkit/fixtures/` (`app.yaml`, `app.toml`,
+  `layered/…`)
+* `TestConfig` / `ServerConfig` — the canonical model the fixtures
+  describe; reuse it, or define your own and reuse the `assert_*`
+  suites unchanged
+
+The suites panic on the first violated check — they're test helpers,
+not libraries. `scarab-testkit`'s own `tests/conformance.rs` runs
+every suite against the workspace impls and is the worked example.
 
 ---
 
@@ -631,13 +968,18 @@ scarab-config-toml / scarab-config-yaml
 ```
 
 * `scarab-config` is pure: traits, the `Discovery` spec, path
-  helpers — no I/O, no formats, no models.
+  helpers, and the JSON merge half (`merge_value` /
+  `apply_overrides`) — no I/O, no formats, no models.
 * `scarab-config-file` is the discovery impl every org repo
-  copy-pasted: explicit path → env var → search dirs, extension
-  dispatch across a format list.
+  copy-pasted: `FileSource` picks the *first* matching file;
+  `LayeredFileSource` merges *every* dir's file plus explicit/override
+  layers into one `T`. Both dispatch by extension across a format
+  list.
 * `scarab-config-toml` / `-yaml` own only syntax — serde
   parse/render over any `T`. Formats are separate crates so a
-  consumer can carry just the syntax it wants.
+  consumer can carry just the syntax it wants. Layered loading parses
+  each layer as `serde_json::Value` through the same blanket impls,
+  so `T` itself never needs `Serialize`.
 
 Generic-over-`T` is the load-bearing decision: one `FileSource`
 serves `myco`, `tamias`, `tarsi`, and every future repo because the
@@ -668,11 +1010,15 @@ scarab-template-minijinja ── the one engine impl (v1)
 * `scarab-template` holds the pack model and path safety — pure
   domain, engine-agnostic. `merge_context` defines layer precedence;
   `safe_into`/`safe_src` define what "inside the target" means.
+  `template.extends` composes packs: tamias materializes each
+  ancestor's payload at `.scarab-parent/`, and the driver renders
+  the chain ancestor-first so children override parents on `into`
+  conflicts — inheritance without a fetch capability in the driver.
 * `tamias-driver-template` is where I/O lives: manifest loading,
-  var resolution (pack defaults → auto → file → env → args),
-  render+write, digest state. It implements the tamias driver
-  contract, so packs distribute through tamias like every other
-  content type — no bespoke install path.
+  chain walking, var resolution (ancestor defaults → pack defaults
+  → auto → file → env → args), render+write, digest state. It
+  implements the tamias driver contract, so packs distribute through
+  tamias like every other content type — no bespoke install path.
 * `scarab-template-minijinja` is deliberately the only engine:
   minijinja is small, sandboxed by construction, and its
   `{{ }}`/`{% %}` syntax covers config-file templating without a
@@ -700,6 +1046,10 @@ state) stay local.
 * **Uninstall is digest-exact.** Only files still matching their
   recorded sha256 are removed; user edits are preserved and
   reported.
+* **Layers merge as JSON, not as `T`.** `LayeredFileSource` folds
+  `serde_json::Value` trees — objects key-wise, scalars/arrays
+  replace — before one final deserialize, so merge semantics stay
+  format- and model-agnostic.
 * **Secrets stay names.** Config surfaces carry secret *names*,
   never values — cuora owns the values.
 
@@ -716,14 +1066,14 @@ generic over the model) and **templated content packs** (the
 
 ## Neighbors
 
-| Repo | Owns | Scarab's relation |
-| --- | --- | --- |
-| **tamias** | Content distribution — refs, fetch, store, install pipeline, driver dispatch | Scarab ships *inside* tamias's world: `tamias-driver-template` is a content driver; template packs are tamias packages. Scarab never reimplements fetch/install/store. |
-| **cuora** | Secret values — sealed, not spilled | Config carries secret *names*, never values. A template var named `api_key` holds a reference/name; cuora resolves it. |
-| **tarsi** | Release plane — changelog → bump → tag → publish | A consumer: `tarsi.toml`/profile loading rides `scarab-config`. |
-| **myco / kuda / mimus** | Work ledger, code-map, verification | Consumers of the config port for their own `<name>.yaml`/`.toml` discovery — the exact problem P-017 generalized. |
-| **hypha** | Pure distributed substrate | The P-015 config crates were ported *here*, not kept there — hypha stays substrate-only. |
-| **peregrin / sepia / pavo** | Orchestration, sessions, agent UI | May consume either plane; neither defines scarab's contracts. |
+| Repo                        | Owns                                                                         | Scarab's relation                                                                                                                                                      |
+| --------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **tamias**                  | Content distribution — refs, fetch, store, install pipeline, driver dispatch | Scarab ships *inside* tamias's world: `tamias-driver-template` is a content driver; template packs are tamias packages. Scarab never reimplements fetch/install/store. |
+| **cuora**                   | Secret values — sealed, not spilled                                          | Config carries secret *names*, never values. A template var named `api_key` holds a reference/name; cuora resolves it.                                                 |
+| **tarsi**                   | Release plane — changelog → bump → tag → publish                             | A consumer: `tarsi.toml`/profile loading rides `scarab-config`.                                                                                                        |
+| **myco / kuda / mimus**     | Work ledger, code-map, verification                                          | Consumers of the config port for their own `<name>.yaml`/`.toml` discovery — the exact problem P-017 generalized.                                                      |
+| **hypha**                   | Pure distributed substrate                                                   | The P-015 config crates were ported *here*, not kept there — hypha stays substrate-only.                                                                               |
+| **peregrin / sepia / pavo** | Orchestration, sessions, agent UI                                            | May consume either plane; neither defines scarab's contracts.                                                                                                          |
 
 ## What scarab deliberately is not
 

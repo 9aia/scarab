@@ -9,14 +9,14 @@ generic over the model) and **templated content packs** (the
 
 ## Neighbors
 
-| Repo | Owns | Scarab's relation |
-| --- | --- | --- |
-| **tamias** | Content distribution — refs, fetch, store, install pipeline, driver dispatch | Scarab ships *inside* tamias's world: `tamias-driver-template` is a content driver; template packs are tamias packages. Scarab never reimplements fetch/install/store. |
-| **cuora** | Secret values — sealed, not spilled | Config carries secret *names*, never values. A template var named `api_key` holds a reference/name; cuora resolves it. |
-| **tarsi** | Release plane — changelog → bump → tag → publish | A consumer: `tarsi.toml`/profile loading rides `scarab-config`. |
-| **myco / kuda / mimus** | Work ledger, code-map, verification | Consumers of the config port for their own `<name>.yaml`/`.toml` discovery — the exact problem P-017 generalized. |
-| **hypha** | Pure distributed substrate | The P-015 config crates were ported *here*, not kept there — hypha stays substrate-only. |
-| **peregrin / sepia / pavo** | Orchestration, sessions, agent UI | May consume either plane; neither defines scarab's contracts. |
+| Repo                        | Owns                                                                         | Scarab's relation                                                                                                                                                      |
+| --------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **tamias**                  | Content distribution — refs, fetch, store, install pipeline, driver dispatch | Scarab ships *inside* tamias's world: `tamias-driver-template` is a content driver; template packs are tamias packages. Scarab never reimplements fetch/install/store. |
+| **cuora**                   | Secret values — sealed, not spilled                                          | Config carries secret *names*, never values. A template var named `api_key` holds a reference/name; cuora resolves it.                                                 |
+| **tarsi**                   | Release plane — changelog → bump → tag → publish                             | A consumer: `tarsi.toml`/profile loading rides `scarab-config`.                                                                                                        |
+| **myco / kuda / mimus**     | Work ledger, code-map, verification                                          | Consumers of the config port for their own `<name>.yaml`/`.toml` discovery — the exact problem P-017 generalized.                                                      |
+| **hypha**                   | Pure distributed substrate                                                   | The P-015 config crates were ported *here*, not kept there — hypha stays substrate-only.                                                                               |
+| **peregrin / sepia / pavo** | Orchestration, sessions, agent UI                                            | May consume either plane; neither defines scarab's contracts.                                                                                                          |
 
 ## What scarab deliberately is not
 
