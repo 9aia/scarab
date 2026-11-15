@@ -2,6 +2,7 @@
 
 Generic config + template expertise — ports are traits, format and engine impls are separate crates; consumers plug in their own config model `T` and template pack.
 
+<!-- crate-map -->
 | crate | layer | purpose |
 |---|---|---|
 | `scarab-config` | port | Config port — ConfigSource&lt;T&gt;/ConfigFormat generic over the config model, plus the shared file-discovery spec |
