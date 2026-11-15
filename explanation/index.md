@@ -1,4 +1,5 @@
 # Explanation
 
-- [Architecture](architecture.md)
-- [Boundaries](boundaries.md)
+- [Architecture](architecture.md) — the two planes, the ports, the invariants
+- [Concepts](concepts.md) — the domain vocabulary, defined once
+- [Boundaries](boundaries.md) — owns / doesn't-own, neighbors named

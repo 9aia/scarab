@@ -6,12 +6,15 @@ flow is three steps: define your serde model, pick a
 
 ## 1. Add the crates
 
+Scarab isn't published to crates.io — depend on the git repo, like
+every org consumer does (`myco`, `tarsi`, …):
+
 ```toml
 [dependencies]
-scarab-config = "0.1"
-scarab-config-file = "0.1"
-scarab-config-yaml = "0.1"
-scarab-config-toml = "0.1"
+scarab-config = { git = "ssh://git@github.com/9aia/scarab.git" }
+scarab-config-file = { git = "ssh://git@github.com/9aia/scarab.git" }
+scarab-config-yaml = { git = "ssh://git@github.com/9aia/scarab.git" }
+scarab-config-toml = { git = "ssh://git@github.com/9aia/scarab.git" }
 serde = { version = "1", features = ["derive"] }
 ```
 

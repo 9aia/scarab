@@ -102,3 +102,17 @@ state) stay local.
   format- and model-agnostic.
 - **Secrets stay names.** Config surfaces carry secret _names_,
   never values — cuora owns the values.
+
+## Where it sits
+
+Scarab is a **library** in the org's layering — below the engines,
+consumed through tamias. The stack is **tamias** (package & content
+manager) → **engines** (myco, kuda, mimus, sepia, sturn, hypha,
+tarsi, cicada, cypera, peregrin) → **orchestration** (peregrin
+campaigns) → **surfaces** (pavo, MCP fronts).
+
+Scarab doesn't run anywhere itself: engines call `scarab-config`
+to load their `<name>.yaml`/`.toml`, and tamias distributes
+`type: template` packs that `tamias-driver-template` renders. It
+sits beside the engines as shared expertise — the config port every
+engine agrees on, the template mechanism every pack shares.

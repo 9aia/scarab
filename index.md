@@ -8,7 +8,7 @@ hero:
   actions:
     - theme: brand
       text: Getting Started
-      link: /getting-started
+      link: /tutorials/getting-started
     - theme: alt
       text: Architecture
       link: /explanation/architecture
@@ -40,3 +40,36 @@ features:
     link: /explanation/architecture
     linkText: architecture
 ---
+
+## What it is
+
+Scarab is the org's config & template expertise: a generic config
+loading port (`ConfigSource<T>`/`ConfigFormat<T>` + a `Discovery`
+spec, generic over the consumer's serde model) and a templated
+content plane (`type: template` tamias packs rendered by a
+sandboxed MiniJinja engine).
+
+## Why
+
+Every repo was copy-pasting the same config-discovery dance —
+explicit path → `$<NAME>_CONFIG` → `./<name>.<ext>` →
+`~/.config/<name>/` — and templated dotfiles/config packs had no
+shared mechanism. Scarab generalizes both once, behind ports, so
+consumers keep only their `Config` type.
+
+## Boundary
+
+- **Owns:** config discovery + formats, the `type: template` pack
+  model/driver/engine.
+- **Doesn't own:** secret values ([cuora](https://9aia.com/cuora/)),
+  distribution ([tamias](https://9aia.com/tamias/)), releases
+  ([tarsi](https://9aia.com/tarsi/)).
+
+## Where to go next
+
+| You want to… | Go to |
+| --- | --- |
+| Load your first typed config | [Tutorial](/tutorials/getting-started) |
+| Do a task (custom discovery, layered configs, template packs) | [How-to](/how-to/) |
+| Understand the design (ports, planes, boundaries) | [Explanation](/explanation/) |
+| Look up a trait, type, or pack field | [Reference](/reference/) |

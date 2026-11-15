@@ -12,7 +12,7 @@ export default defineConfig({
   ignoreDeadLinks: [/\/api\//],
   themeConfig: {
     nav: [
-      { text: "Getting Started", link: "/getting-started" },
+      { text: "Tutorial", link: "/tutorials/getting-started" },
       { text: "Explanation", link: "/explanation/architecture" },
       { text: "Reference", link: "/reference/config-port" },
       {
@@ -29,8 +29,8 @@ export default defineConfig({
     ],
     sidebar: [
       {
-        text: "Getting Started",
-        items: [{ text: "Load a typed config", link: "/getting-started" }],
+        text: "Tutorials",
+        items: [{ text: "Load a typed config", link: "/tutorials/getting-started" }],
       },
       {
         text: "How-to",
@@ -58,6 +58,7 @@ export default defineConfig({
         items: [
           { text: "Overview", link: "/explanation/" },
           { text: "Architecture", link: "/explanation/architecture" },
+          { text: "Concepts", link: "/explanation/concepts" },
           { text: "Boundaries", link: "/explanation/boundaries" },
         ],
       },
