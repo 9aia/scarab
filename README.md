@@ -18,16 +18,7 @@ Ports-and-adapters, flat `crates/` workspace. Ports are traits,
 impls are separate crates; `xtask` is the composition root for
 repo chores.
 
-| Crate | Role |
-| --- | --- |
-| `scarab-config` | `ConfigSource<T>`/`ConfigFormat<T>` traits + `Discovery` spec + JSON merge (`merge_value`/`apply_overrides`) — generic over the config model, no I/O |
-| `scarab-config-file` | file impls — `FileSource` first-match and `LayeredFileSource` merge-all; explicit path → `$<NAME>_CONFIG` → `./<name>.<ext>` → `~/.config/<name>/`; YAML preferred on ties |
-| `scarab-config-toml` | TOML `ConfigFormat` — serde parse/render for any model |
-| `scarab-config-yaml` | YAML `ConfigFormat` — claims `.yaml`/`.yml` |
-| `scarab-template` | template port — `TemplateEngine` trait, `PackTemplate` model, `merge_context`, safe-path validation |
-| `scarab-template-minijinja` | MiniJinja `TemplateEngine` impl — `{{ }}` vars + `{% %}` blocks, sandboxed |
-| `scarab-testkit` | conformance suites (`assert_config_format/discovery/source/merge_*`, template engine) + golden fixtures |
-| `tamias-driver-template` | `type: template` content driver — install validates, deploy renders pack payloads (incl. `extends` chains) to target paths, uninstall removes |
+The crate map is generated from the workspace Cargo.tomls — see [AGENTS.md](AGENTS.md) for the dev map and [the docs site](https://9aia.com/scarab/) for depth.
 
 A consumer keeps only its serde `Config` model:
 
