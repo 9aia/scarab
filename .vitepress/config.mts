@@ -60,6 +60,7 @@ export default defineConfig({
           { text: "Architecture", link: "/explanation/architecture" },
           { text: "Concepts", link: "/explanation/concepts" },
           { text: "Boundaries", link: "/explanation/boundaries" },
+          { text: "Decisions", link: "/explanation/decisions" },
         ],
       },
     ],
