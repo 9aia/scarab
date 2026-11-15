@@ -46,6 +46,7 @@ export default defineConfig({
         text: "Reference",
         items: [
           { text: "Overview", link: "/reference/" },
+          { text: "Crates", link: "/reference/crates" },
           { text: "Config port", link: "/reference/config-port" },
           { text: "Template packs", link: "/reference/template-packs" },
           { text: "Template driver", link: "/reference/driver" },
