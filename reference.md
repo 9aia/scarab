@@ -3,6 +3,7 @@ url: /scarab/reference.md
 ---
 # Reference
 
+* [Crates](crates.md) — generated from workspace Cargo.tomls
 * [Config port](config-port.md) — `ConfigSource`/`ConfigFormat` traits, `Discovery`, `FileSource`, `LayeredFileSource`
 * [Template packs](template-packs.md) — `template:` manifest schema, var context, safe paths, `extends` chains
 * [Template driver](driver.md) — `tamias-driver-template` argv contract, state file
