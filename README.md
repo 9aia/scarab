@@ -92,6 +92,8 @@ cargo xtask check          # fmt + clippy -D warnings
 cargo xtask test           # whole suite (nextest if present)
 cargo xtask coverage       # llvm-cov report; extra args pass through
 cargo xtask package        # cargo package --workspace (verify)
+cargo xtask smoke          # stub — not wired yet (needs crates.io publish)
+cargo xtask site           # build the docs site (needs docs/ worktree)
 ```
 
 Git hooks live in `.hooks/` (`core.hooksPath` = `.hooks`).
