@@ -11,7 +11,7 @@ consumer's binary.
 
 ```toml
 [dev-dependencies]
-scarab-testkit = "0.1"
+scarab-testkit = { git = "ssh://git@github.com/9aia/scarab.git" }
 ```
 
 ## Format conformance

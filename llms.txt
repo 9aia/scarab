@@ -6,9 +6,9 @@ generic config loading and templated content packs — the seal that validates w
 
 ## Table of Contents
 
-### Getting Started
+### Tutorials
 
-- [Getting started](/scarab/getting-started.md)
+- [Getting started](/scarab/tutorials/getting-started.md)
 
 ### How-to
 
@@ -31,5 +31,6 @@ generic config loading and templated content packs — the seal that validates w
 
 - [Explanation](/scarab/explanation.md)
 - [Architecture](/scarab/explanation/architecture.md)
+- [Concepts](/scarab/explanation/concepts.md)
 - [Boundaries](/scarab/explanation/boundaries.md)
 
