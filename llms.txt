@@ -33,4 +33,5 @@ generic config loading and templated content packs — the seal that validates w
 - [Architecture](/scarab/explanation/architecture.md)
 - [Concepts](/scarab/explanation/concepts.md)
 - [Boundaries](/scarab/explanation/boundaries.md)
+- [Decisions](/scarab/explanation/decisions.md)
 
