@@ -1,0 +1,21 @@
+# scarab — docs/reference generation contract for `cypera`
+# (`cypera gen crate-map`, discovered upward from --repo).
+# Replaces the retired docs/gen-*.py wrapper; schema lives in
+# ../cypera crates/cypera-core/src/repo_config.rs.
+
+[crate_map]
+
+[crate_map.layers]
+"scarab-config" = "port"
+"scarab-template" = "port"
+"scarab-config-file" = "adapter"
+"scarab-config-toml" = "adapter"
+"scarab-config-yaml" = "adapter"
+"scarab-template-minijinja" = "adapter"
+"tamias-driver-template" = "driver"
+"scarab-testkit" = "testkit"
+"scarab-xtask" = "tooling"
+
+[[crate_map.splices]]
+target = "docs/reference/crates.md"
+marker = "<!-- crate-map -->"
