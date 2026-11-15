@@ -19,3 +19,6 @@
 [[crate_map.splices]]
 target = "docs/reference/crates.md"
 marker = "<!-- crate-map -->"
+
+[check]
+profile = "engine"
