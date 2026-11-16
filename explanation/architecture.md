@@ -105,14 +105,15 @@ state) stay local.
 
 ## Where it sits
 
-Scarab is a **library** in the org's layering — below the engines,
-consumed through tamias. The stack is **tamias** (package & content
-manager) → **engines** (myco, kuda, mimus, sepia, sturn, hypha,
-tarsi, cicada, cypera, peregrin) → **orchestration** (peregrin
-campaigns) → **surfaces** (pavo, MCP fronts).
+Scarab is a **library** in the org's layering — delivery-layer
+expertise consumed through tamias. The stack is **delivery**
+(tamias distribution, scarab config/templates, tarsi releases,
+bupha CI) → **memory** (myco, kuda, sturn, hypha) → **process**
+(cuora, mimus, cicada, lasius, sepia) → **agency** (peregrin
+campaigns, pavo views).
 
 Scarab doesn't run anywhere itself: engines call `scarab-config`
 to load their `<name>.yaml`/`.toml`, and tamias distributes
 `type: template` packs that `tamias-driver-template` renders. It
-sits beside the engines as shared expertise — the config port every
+sits beneath the layers as shared expertise — the config port every
 engine agrees on, the template mechanism every pack shares.
