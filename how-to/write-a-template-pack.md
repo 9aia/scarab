@@ -59,9 +59,10 @@ user = "{{ user }}"
 
 ## Inherit from a parent pack
 
-`template.extends` names another template pack by tamias ref — the
-child renders the parent's files too, with the child's `into`s and
-`vars` winning:
+`template.extends` names other template packs by tamias ref — one
+bare ref, one `{source, via}` table, or an ordered list (lowest
+precedence first). The child renders the parents' files too, with
+the child's `into`s and `vars` winning by default:
 
 ```yaml
 template:
@@ -73,14 +74,16 @@ template:
       into: ./extra.toml
 ```
 
-`tamias install` resolves the ref and materializes the parent's
-payload inside yours at `.scarab-parent/` (recursively for
-grandparents). The driver renders ancestor-first: parent files
-write first, yours last — on an `into` conflict **you win**, and the
-state digest records your version. See
+`tamias install` resolves the ref(s) and materializes the parents'
+payloads inside yours — `.scarab-parent/` for one parent,
+`.scarab-parents/<i>/` for several (grandparents nest recursively).
+The driver renders ancestor-first: parent files write first, yours
+last — on an `into` conflict **you win** by default, and the state
+digest records your version. `template.merge` tunes the chain
+(`vars`/`into` precedence, `max-depth`) — see
 [template packs — composition](/reference/template-packs#composition)
 for the full contract, including the vendored-parent case
-(`.scarab-parent/` present without `extends`).
+(`.scarab-parent*/` present without `extends`).
 
 ## Variable layers
 

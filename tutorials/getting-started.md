@@ -14,6 +14,7 @@ every org consumer does (`myco`, `tarsi`, …):
 
 ```toml
 [dependencies]
+# org consumers pin a rev — see myco/Cargo.toml for the current one
 scarab-config = { git = "ssh://git@github.com/9aia/scarab.git" }
 scarab-config-file = { git = "ssh://git@github.com/9aia/scarab.git" }
 scarab-config-yaml = { git = "ssh://git@github.com/9aia/scarab.git" }

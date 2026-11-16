@@ -14,6 +14,7 @@ every org consumer does (`myco`, `tarsi`, …):
 
 ```toml
 [dependencies]
+# org consumers pin a rev — see myco/Cargo.toml for the current one
 scarab-config = { git = "ssh://git@github.com/9aia/scarab.git" }
 scarab-config-file = { git = "ssh://git@github.com/9aia/scarab.git" }
 scarab-config-yaml = { git = "ssh://git@github.com/9aia/scarab.git" }
@@ -321,9 +322,10 @@ user = "{{ user }}"
 
 ## Inherit from a parent pack
 
-`template.extends` names another template pack by tamias ref — the
-child renders the parent's files too, with the child's `into`s and
-`vars` winning:
+`template.extends` names other template packs by tamias ref — one
+bare ref, one `{source, via}` table, or an ordered list (lowest
+precedence first). The child renders the parents' files too, with
+the child's `into`s and `vars` winning by default:
 
 ```yaml
 template:
@@ -335,14 +337,16 @@ template:
       into: ./extra.toml
 ```
 
-`tamias install` resolves the ref and materializes the parent's
-payload inside yours at `.scarab-parent/` (recursively for
-grandparents). The driver renders ancestor-first: parent files
-write first, yours last — on an `into` conflict **you win**, and the
-state digest records your version. See
+`tamias install` resolves the ref(s) and materializes the parents'
+payloads inside yours — `.scarab-parent/` for one parent,
+`.scarab-parents/<i>/` for several (grandparents nest recursively).
+The driver renders ancestor-first: parent files write first, yours
+last — on an `into` conflict **you win** by default, and the state
+digest records your version. `template.merge` tunes the chain
+(`vars`/`into` precedence, `max-depth`) — see
 [template packs — composition](/reference/template-packs#composition)
 for the full contract, including the vendored-parent case
-(`.scarab-parent/` present without `extends`).
+(`.scarab-parent*/` present without `extends`).
 
 ## Variable layers
 
@@ -405,8 +409,9 @@ tamias-driver-template <verb> --dir <payload> --name <pkg> \
 | `capabilities`  | Print `{"name": "template", "types": ["template"], "verbs": […], "engine": "minijinja"}` — the discovery probe. |
 
 On an `extends` chain, `install`/`deploy` render every ancestor pack
-inside `.scarab-parent/` first — the child's files win on `into`
-conflicts. See
+inside `.scarab-parent/`/`.scarab-parents/` first — the child's
+files win on `into` conflicts by default (`template.merge` tunes
+it). See
 [template packs — composition](/reference/template-packs#composition).
 
 ## Choosing the target dir
@@ -656,7 +661,11 @@ template:
   vars: # optional — flat name → JSON value map
     env: dev
     replicas: 1
-  extends: git:9aia/base//libraries/base-pack # optional — parent pack ref
+  extends: git:9aia/base//libraries/base-pack # optional — parent ref(s)
+  merge: # optional — composition rules (defaults shown)
+    vars: child-wins    #   child-wins | parent-wins
+    into: child-wins    #   child-wins | parent-wins | error
+    max-depth: 8        #   ancestor nesting cap (>= 1)
   files: # required, non-empty
     - src: app.toml.tmpl # path inside the pack payload
       into: ./config/app.toml # render target, relative to target dir
@@ -682,35 +691,72 @@ payload (`TemplateError::UnsafeSource`).
 
 ### `template.extends`
 
-Optional tamias ref naming a **parent template pack**
-(`git:org/repo//path`, `cf:…`, a store name, …). The driver never
-resolves refs itself — resolution is tamias-side. See
-[Composition](#composition) below.
+Optional parent declaration(s) — one or several tamias refs
+(`git:org/repo//path`, `cf:…`, a store name, …). Three spellings,
+all normalizing to an ordered parent list **lowest precedence
+first**:
+
+```yaml
+extends: git:9aia/base//libraries/base-pack            # one parent
+# extends: { source: git:9aia/base//x, via: tamias-ref }  # structured
+# extends:                                             # several parents
+#   - git:9aia/platform
+#   - source: corp/overlay
+#     via: tamias-ref
+```
+
+`source` is an opaque locator — its grammar belongs to the resolver
+(`via` names the scheme; absent/`tamias-ref` = the ambient tamias
+resolver). An unknown `via` is a resolution error, never a silent
+fallback. See [Composition](#composition) below.
+
+### `template.merge`
+
+Optional composition rules as data (defaults shown above). The
+**installing (root) pack's** `merge` governs the whole chain —
+ancestor packs' own `merge` tables describe how they compose when
+installed directly.
+
+* `vars` — pack-default precedence across the chain:
+  `child-wins` (default, nearer packs win) or `parent-wins`.
+* `into` — duplicate-target policy: `child-wins` (default, last
+  render kept), `parent-wins` (first kept), or `error`.
+* `max-depth` — ancestor-nesting cap (default 8, must be ≥ 1).
 
 ## Composition (`extends` chains)
 
-A pack may inherit from another template pack. `tamias install`
+A pack may inherit from other template packs. `tamias install`
 resolves `template.extends` and materializes each ancestor's payload
-inside the child's at `.scarab-parent/` — recursively, so a
-grandparent lands at `.scarab-parent/.scarab-parent/`, and so on.
+inside the child's — `.scarab-parent/` for a single parent,
+`.scarab-parents/<i>/` (index = declaration order) for several —
+recursively, so a grandparent lands nested inside its parent.
 
-The driver then renders the chain **ancestor-first**:
+The driver evaluates the chain **ancestor-first** (the agnostic
+contract lives in `scarab-template`'s `compose.rs` +
+`COMPOSITION.md`):
 
-* parent `template.vars` are the lowest-precedence defaults —
-  folding vars ancestor→child means the child's defaults win
-* parent files write first, the child's last — on an `into`
-  conflict the **child wins**; distinct `into`s all render
-* the state file records only the final (child) digest for a
-  contested path, which is exactly what `uninstall` needs
+* parents render in declaration order, each parent's own ancestors
+  before it; a shared ancestor renders **once** at its first
+  occurrence (diamonds collapse)
+* ancestor `template.vars` fold into the defaults ancestor-first —
+  subject to `merge.vars`; the child's defaults then win under the
+  default `child-wins`
+* every chain entry's `files[]` renders against the one context;
+  `into` conflicts resolve per `merge.into` (default: the
+  descendant's render wins)
+* the state file records only the final written digest per `into` —
+  exactly what `uninstall` needs
 
 Edge cases:
 
-* `.scarab-parent/` present **without** `extends` is honored as a
-  vendored parent — useful for local composition and tests
-* `extends` declared but `.scarab-parent/` absent is an error: the
-  payload never went through `tamias install`, and the driver can't
-  fetch refs
-* `extends: ""` (empty) fails manifest validation
+* materialized `.scarab-parent*/` present **without** `extends` is
+  honored as vendored composition — useful for local packs and tests
+* `extends` declared but fewer/more materialized parents than
+  declared is an error: the payload never went through `tamias
+  install` (or the layout is corrupt), and the driver can't fetch
+  refs
+* `extends: []` or a parent with an empty `source` fails manifest
+  validation
 
 ## `TemplateEngine`
 
@@ -809,19 +855,25 @@ tamias wraps it as `driver … failed: …`), `2` usage/arg error.
 ## `extends` chains
 
 `install` and `deploy` walk the pack's chain: each level's payload
-may nest its parent at `.scarab-parent/` (materialized by
-`tamias install` from `template.extends`). `uninstall` needs no
-chain — it reverses whatever the state file recorded.
+may nest its parents at `.scarab-parent/` (one parent) or
+`.scarab-parents/<i>/` (several, index = declaration order) —
+materialized by `tamias install` from `template.extends`.
+`uninstall` needs no chain — it reverses whatever the state file
+recorded.
 
 * `install` reports the merged plan — every pack's `into`s in render
   order, with a count of files overridden by a later pack
-* `deploy` renders ancestor-first; on an `into` conflict the child
-  (later pack) writes last and its digest is what state records
-* `extends` declared but `.scarab-parent/` missing → error ("install
-  through `tamias install`"); `.scarab-parent/` present without
-  `extends` → honored as a vendored parent
-* var layers fold ancestor `template.vars` first, so nearer packs
-  win — see [template packs](/reference/template-packs#composition)
+* `deploy` renders ancestor-first under the root pack's
+  `template.merge` rules; on an `into` conflict the default
+  `child-wins` policy lets the child (later pack) write last and
+  its digest is what state records
+* `extends` declared but the materialized parent count doesn't
+  match → error ("install through `tamias install`");
+  `.scarab-parent*/` present without `extends` → honored as
+  vendored parents
+* var layers fold ancestor `template.vars` first (subject to
+  `merge.vars`), so nearer packs win by default — see
+  [template packs](/reference/template-packs#composition)
 
 ## State file
 
@@ -1038,9 +1090,10 @@ scarab-template-minijinja ── the one engine impl (v1)
   domain, engine-agnostic. `merge_context` defines layer precedence;
   `safe_into`/`safe_src` define what "inside the target" means.
   `template.extends` composes packs: tamias materializes each
-  ancestor's payload at `.scarab-parent/`, and the driver renders
-  the chain ancestor-first so children override parents on `into`
-  conflicts — inheritance without a fetch capability in the driver.
+  ancestor's payload at `.scarab-parent/` (one parent) or
+  `.scarab-parents/<i>/` (several), and the driver renders the
+  chain ancestor-first under the root pack's `template.merge`
+  rules — inheritance without a fetch capability in the driver.
 * `tamias-driver-template` is where I/O lives: manifest loading,
   chain walking, var resolution (ancestor defaults → pack defaults
   → auto → file → env → args), render+write, digest state. It
@@ -1132,10 +1185,11 @@ config is the base and project config lands on top. Contrast
 ## Template pack
 
 A tamias package of `type: template`: a `template:` table in
-`tamias.yaml` declaring sources, targets (`into`), variables, and
-optional `extends` chains. Packs are ordinary tamias content —
-installed, deployed, and uninstalled by `tamias-driver-template`.
-See [Reference: template packs](../reference/template-packs).
+`tamias.yaml` declaring sources, targets (`into`), variables,
+optional `extends` parents, and `merge` rules. Packs are ordinary
+tamias content — installed, deployed, and uninstalled by
+`tamias-driver-template`. See [Reference: template
+packs](../reference/template-packs).
 
 ## TemplateEngine
 

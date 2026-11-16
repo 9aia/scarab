@@ -35,8 +35,9 @@ tamias-driver-template <verb> --dir <payload> --name <pkg> \
 | `capabilities`  | Print `{"name": "template", "types": ["template"], "verbs": […], "engine": "minijinja"}` — the discovery probe. |
 
 On an `extends` chain, `install`/`deploy` render every ancestor pack
-inside `.scarab-parent/` first — the child's files win on `into`
-conflicts. See
+inside `.scarab-parent/`/`.scarab-parents/` first — the child's
+files win on `into` conflicts by default (`template.merge` tunes
+it). See
 [template packs — composition](/reference/template-packs#composition).
 
 ## Choosing the target dir
