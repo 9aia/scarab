@@ -30,10 +30,11 @@ config is the base and project config lands on top. Contrast
 ## Template pack
 
 A tamias package of `type: template`: a `template:` table in
-`tamias.yaml` declaring sources, targets (`into`), variables, and
-optional `extends` chains. Packs are ordinary tamias content —
-installed, deployed, and uninstalled by `tamias-driver-template`.
-See [Reference: template packs](../reference/template-packs).
+`tamias.yaml` declaring sources, targets (`into`), variables,
+optional `extends` parents, and `merge` rules. Packs are ordinary
+tamias content — installed, deployed, and uninstalled by
+`tamias-driver-template`. See [Reference: template
+packs](../reference/template-packs).
 
 ## TemplateEngine
 

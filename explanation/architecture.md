@@ -61,9 +61,10 @@ scarab-template-minijinja ── the one engine impl (v1)
   domain, engine-agnostic. `merge_context` defines layer precedence;
   `safe_into`/`safe_src` define what "inside the target" means.
   `template.extends` composes packs: tamias materializes each
-  ancestor's payload at `.scarab-parent/`, and the driver renders
-  the chain ancestor-first so children override parents on `into`
-  conflicts — inheritance without a fetch capability in the driver.
+  ancestor's payload at `.scarab-parent/` (one parent) or
+  `.scarab-parents/<i>/` (several), and the driver renders the
+  chain ancestor-first under the root pack's `template.merge`
+  rules — inheritance without a fetch capability in the driver.
 - `tamias-driver-template` is where I/O lives: manifest loading,
   chain walking, var resolution (ancestor defaults → pack defaults
   → auto → file → env → args), render+write, digest state. It

@@ -39,19 +39,25 @@ tamias wraps it as `driver … failed: …`), `2` usage/arg error.
 ## `extends` chains
 
 `install` and `deploy` walk the pack's chain: each level's payload
-may nest its parent at `.scarab-parent/` (materialized by
-`tamias install` from `template.extends`). `uninstall` needs no
-chain — it reverses whatever the state file recorded.
+may nest its parents at `.scarab-parent/` (one parent) or
+`.scarab-parents/<i>/` (several, index = declaration order) —
+materialized by `tamias install` from `template.extends`.
+`uninstall` needs no chain — it reverses whatever the state file
+recorded.
 
 - `install` reports the merged plan — every pack's `into`s in render
   order, with a count of files overridden by a later pack
-- `deploy` renders ancestor-first; on an `into` conflict the child
-  (later pack) writes last and its digest is what state records
-- `extends` declared but `.scarab-parent/` missing → error ("install
-  through `tamias install`"); `.scarab-parent/` present without
-  `extends` → honored as a vendored parent
-- var layers fold ancestor `template.vars` first, so nearer packs
-  win — see [template packs](/reference/template-packs#composition)
+- `deploy` renders ancestor-first under the root pack's
+  `template.merge` rules; on an `into` conflict the default
+  `child-wins` policy lets the child (later pack) write last and
+  its digest is what state records
+- `extends` declared but the materialized parent count doesn't
+  match → error ("install through `tamias install`");
+  `.scarab-parent*/` present without `extends` → honored as
+  vendored parents
+- var layers fold ancestor `template.vars` first (subject to
+  `merge.vars`), so nearer packs win by default — see
+  [template packs](/reference/template-packs#composition)
 
 ## State file
 
