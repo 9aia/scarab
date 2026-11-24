@@ -1,0 +1,43 @@
+name: sturn-wal
+path: refs/sturn/wal/9aia
+purpose: sturn coordination WAL — claims, writes, snaps, review events in refs/sturn/*
+api: []
+deps: []
+notes: ''
+verify:
+- refs/sturn/wal/9aia
+- refs/sturn/wal/devin
+- refs/sturn/wal/devin-docs-gate
+- refs/sturn/wal/devin-pl014-e1
+- refs/sturn/wal/devin-shim
+- refs/sturn/wal/docs-audit
+- refs/sturn/wal/docs-gate
+- refs/sturn/wal/pl014-e1
+- refs/sturn/wal/scarab
+- refs/sturn/wal/sync-refs-rollout
+provenance:
+  files:
+  - refs/sturn/wal/9aia
+  - refs/sturn/wal/devin
+  - refs/sturn/wal/devin-docs-gate
+  - refs/sturn/wal/devin-pl014-e1
+  - refs/sturn/wal/devin-shim
+  - refs/sturn/wal/docs-audit
+  - refs/sturn/wal/docs-gate
+  - refs/sturn/wal/pl014-e1
+  - refs/sturn/wal/scarab
+  - refs/sturn/wal/sync-refs-rollout
+  hashes:
+  - ddb128fcffe2848f9f4bd50a3fa994526f8b590b
+  - 1811b72e3d41fb034cf45916321d122c176d504d
+  - 74e0dcc42beb687812a79c43e4fa46ebbb36b791
+  - d551388a2d8ae53243106ce78b652d954e5a07a6
+  - 7c25fd14ce6d9066648ed85c3abcd0eb5cc550e6
+  - 7511520925c57c1e33ae342fffa6582a86e6a102
+  - 9d2edd884fcdd803b826d1b475f145c61764296c
+  - 9ba6d6e378a1420c1efe38238477a21eda3d5bbe
+  - 28b236b39c598f8285bd645a37a963f6bdc30161
+  - 8cb70f3258f4b372794f38ddc256c2acc1e9018a
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

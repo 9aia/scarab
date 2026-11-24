@@ -20,13 +20,16 @@ type); `-file`/`-toml`/`-yaml` are the impls.
 | `crates/scarab-testkit` | conformance suites (`assert_config_format/discovery/source/merge_*`) + golden fixtures for the config ports |
 | `crates/scarab-template` | template port — `TemplateEngine` trait, `PackTemplate` model, `merge_context`, safe-path validation, and the agnostic composition contract (`compose`: `Extends`/`ParentDecl`/`MergeRules` + `compose_chain`/`apply_into_policy` + `PackLoader`/`ParentLocator` ports — spec in `COMPOSITION.md`) |
 | `crates/scarab-template-minijinja` | MiniJinja `TemplateEngine` impl — `{{ }}` vars + `{% %}` blocks, sandboxed |
+| `crates/scarab-compose` | document-composition kernel — `Composer::resolve_{yaml,toml,json,file}`: `include:`/`snippet:`/`${…}` expansion, `extends:` chains (COMPOSITION.md semantics), `tamias:` refs; `Value`-in/`Value`-out, format-agnostic |
+| `crates/scarab-validate` | JSON-Schema validation for untyped docs — `Schema::compile`/`validate` → `Vec<Violation>` (ported from peregrin `params_schema`) |
 | `crates/tamias-driver-template` | `type: template` content driver — install validates, deploy renders pack payloads (incl. `extends` chains via the materialized-parent locator) to target paths, uninstall removes |
 | `xtask` (`scarab-xtask`) | check / test / coverage / install / package / site — `smoke` is a stub (exits 1; needs crates.io publish) |
 
 ## Boundary
 
-- Scarab owns **config loading** (and later templated content) —
-  consumers keep only their serde `Config` model.
+- Scarab owns **config loading, document composition, and schema
+  validation** — consumers keep only their serde `Config` model and
+  their document types.
 - **tamias** distributes template/config packs; **cuora** owns
   secret values (config carries secret *names*, never values);
   **tarsi** consumes the libs; **hypha** stays pure distributed

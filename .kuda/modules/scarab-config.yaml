@@ -1,0 +1,192 @@
+name: scarab-config
+path: crates/scarab-config/Cargo.toml
+purpose: Config port — ConfigSource<T>/ConfigFormat generic over the config model, plus the shared file-discovery spec
+api:
+- name: ConfigFormat
+  kind: trait
+  file: crates/scarab-config/src/lib.rs
+  line: 40
+  module: scarab-config
+- name: ConfigSource
+  kind: trait
+  file: crates/scarab-config/src/lib.rs
+  line: 31
+  module: scarab-config
+- name: Discovery
+  kind: type
+  file: crates/scarab-config/src/lib.rs
+  line: 109
+  module: scarab-config
+- name: F
+  kind: type
+  file: crates/scarab-config/src/lib.rs
+  line: 215
+  module: scarab-config
+- name: ToyCfg
+  kind: type
+  file: crates/scarab-config/src/lib.rs
+  line: 175
+  module: scarab-config
+- name: apply_overrides
+  kind: function
+  file: crates/scarab-config/src/merge.rs
+  line: 48
+  module: scarab-config
+- name: apply_overrides_on_non_object_initializes
+  kind: function
+  file: crates/scarab-config/src/merge.rs
+  line: 158
+  module: scarab-config
+- name: bare
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 137
+  module: scarab-config
+- name: dirs
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 161
+  module: scarab-config
+- name: discovery_for_app_defaults
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 181
+  module: scarab-config
+- name: dotted_overrides_replace_scalars_in_the_way
+  kind: function
+  file: crates/scarab-config/src/merge.rs
+  line: 150
+  module: scarab-config
+- name: dotted_overrides_set_leaves
+  kind: function
+  file: crates/scarab-config/src/merge.rs
+  line: 131
+  module: scarab-config
+- name: env_var
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 147
+  module: scarab-config
+- name: expand_tilde
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 86
+  module: scarab-config
+- name: expand_tilde_rules
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 197
+  module: scarab-config
+- name: extensions
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 217
+  module: scarab-config
+- name: for_app
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 126
+  module: scarab-config
+- name: format_for
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 61
+  module: scarab-config
+- name: format_for_matches_extension
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 214
+  module: scarab-config
+- name: home_dir
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 75
+  module: scarab-config
+- name: merge
+  kind: module
+  file: crates/scarab-config/src/lib.rs
+  line: 26
+  module: scarab-config
+- name: merge_value
+  kind: function
+  file: crates/scarab-config/src/merge.rs
+  line: 24
+  module: scarab-config
+- name: objects_merge_key_wise_recursively
+  kind: function
+  file: crates/scarab-config/src/merge.rs
+  line: 90
+  module: scarab-config
+- name: overlay_null_replaces
+  kind: function
+  file: crates/scarab-config/src/merge.rs
+  line: 124
+  module: scarab-config
+- name: parse
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 220
+  module: scarab-config
+- name: render
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 223
+  module: scarab-config
+- name: scalars_and_arrays_replace
+  kind: function
+  file: crates/scarab-config/src/merge.rs
+  line: 110
+  module: scarab-config
+- name: scarab-config
+  kind: module
+  file: crates/scarab-config/Cargo.toml
+  line: 1
+  module: scarab-config
+- name: set_dotted
+  kind: function
+  file: crates/scarab-config/src/merge.rs
+  line: 60
+  module: scarab-config
+- name: tests
+  kind: module
+  file: crates/scarab-config/src/lib.rs
+  line: 169
+  module: scarab-config
+- name: tests
+  kind: module
+  file: crates/scarab-config/src/merge.rs
+  line: 85
+  module: scarab-config
+- name: user_config_dir
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 100
+  module: scarab-config
+- name: without_env
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 154
+  module: scarab-config
+deps:
+- serde_json
+- serde
+- serde_json
+- merge
+- serde
+notes: ''
+verify:
+- crates/scarab-config/Cargo.toml
+- crates/scarab-config/src/lib.rs
+- crates/scarab-config/src/merge.rs
+provenance:
+  files:
+  - crates/scarab-config/Cargo.toml
+  - crates/scarab-config/src/lib.rs
+  - crates/scarab-config/src/merge.rs
+  hashes:
+  - 232540f93386359880cfdd9f8e7826889b64c868
+  - 1e8a9539f33198fe1fdb59c5b9f7b424abe62db1
+  - 37fae855cbe52a28a1bf36d5161b5e2e1e7131ce
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

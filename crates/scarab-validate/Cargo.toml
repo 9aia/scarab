@@ -1,0 +1,15 @@
+[package]
+name = "scarab-validate"
+description = "JSON Schema validation over serde_json::Value — compile once, validate many"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+serde_json.workspace = true
+jsonschema.workspace = true

@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/scarab-compose",
     "crates/scarab-config",
     "crates/scarab-config-file",
     "crates/scarab-config-toml",
@@ -8,6 +9,7 @@ members = [
     "crates/scarab-testkit",
     "crates/scarab-template",
     "crates/scarab-template-minijinja",
+    "crates/scarab-validate",
     "crates/tamias-driver-template",
     "xtask",
 ]
@@ -26,6 +28,7 @@ categories = ["command-line-utilities", "development-tools"]
 readme = "README.md"
 
 [workspace.dependencies]
+scarab-compose = { path = "crates/scarab-compose", version = "0.1.0" }
 scarab-config = { path = "crates/scarab-config", version = "0.1.0" }
 scarab-config-file = { path = "crates/scarab-config-file", version = "0.1.0" }
 scarab-config-toml = { path = "crates/scarab-config-toml", version = "0.1.0" }
@@ -33,6 +36,7 @@ scarab-config-yaml = { path = "crates/scarab-config-yaml", version = "0.1.0" }
 scarab-testkit = { path = "crates/scarab-testkit", version = "0.1.0" }
 scarab-template = { path = "crates/scarab-template", version = "0.1.0" }
 scarab-template-minijinja = { path = "crates/scarab-template-minijinja", version = "0.1.0" }
+scarab-validate = { path = "crates/scarab-validate", version = "0.1.0" }
 
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
@@ -40,8 +44,15 @@ serde_yaml_ng = "0.10"
 toml = "0.8"
 tempfile = "3"
 minijinja = "2"
+# Same pin peregrin uses for `params.schema.json` validation.
+jsonschema = "0.60"
 sha2 = "0.10"
 thiserror = "2.0"
+
+# `tamias:` include refs in scarab-compose — same rev pin peregrin uses.
+tamias-core = { git = "ssh://git@github.com/9aia/tamias.git", rev = "255f44cbb530fd11a38b4fee5356524bf927e402", version = "0.1" }
+tamias-store-local = { git = "ssh://git@github.com/9aia/tamias.git", rev = "255f44cbb530fd11a38b4fee5356524bf927e402", version = "0.1" }
+tamias-install = { git = "ssh://git@github.com/9aia/tamias.git", rev = "255f44cbb530fd11a38b4fee5356524bf927e402", version = "0.1" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

@@ -1,0 +1,250 @@
+name: scarab-compose
+path: crates/scarab-compose/Cargo.toml
+purpose: Document composition — include/snippet expansion over YAML/TOML/JSON trees into serde_json::Value
+api:
+- name: ComposeError
+  kind: type
+  file: crates/scarab-compose/src/lib.rs
+  line: 54
+  module: scarab-compose
+- name: Composer
+  kind: type
+  file: crates/scarab-compose/src/lib.rs
+  line: 97
+  module: scarab-compose
+- name: MAX_DEPTH
+  kind: const
+  file: crates/scarab-compose/src/extends.rs
+  line: 79
+  module: scarab-compose
+- name: State
+  kind: type
+  file: crates/scarab-compose/src/extends.rs
+  line: 84
+  module: scarab-compose
+- name: TamiasRoots
+  kind: type
+  file: crates/scarab-compose/src/tamias.rs
+  line: 74
+  module: scarab-compose
+- name: cache_root
+  kind: function
+  file: crates/scarab-compose/src/tamias.rs
+  line: 302
+  module: scarab-compose
+- name: caused
+  kind: function
+  file: crates/scarab-compose/src/lib.rs
+  line: 70
+  module: scarab-compose
+- name: child_and_parent_both_include_and_extend
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 199
+  module: scarab-compose
+- name: child_beats_all_ancestors
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 75
+  module: scarab-compose
+- name: collect
+  kind: function
+  file: crates/scarab-compose/src/extends.rs
+  line: 124
+  module: scarab-compose
+- name: composer
+  kind: function
+  file: crates/scarab-compose/tests/compose.rs
+  line: 14
+  module: scarab-compose
+- name: composer
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 13
+  module: scarab-compose
+- name: deep_merge
+  kind: function
+  file: crates/scarab-compose/src/expand.rs
+  line: 130
+  module: scarab-compose
+- name: deep_merge_semantics
+  kind: function
+  file: crates/scarab-compose/tests/compose.rs
+  line: 443
+  module: scarab-compose
+- name: default
+  kind: function
+  file: crates/scarab-compose/src/lib.rs
+  line: 207
+  module: scarab-compose
+- name: detects_circular_extends
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 118
+  module: scarab-compose
+- name: detects_circular_includes_by_expression
+  kind: function
+  file: crates/scarab-compose/tests/compose.rs
+  line: 176
+  module: scarab-compose
+- name: detects_circular_includes_by_key
+  kind: function
+  file: crates/scarab-compose/tests/compose.rs
+  line: 165
+  module: scarab-compose
+- name: detects_circular_snippet_references
+  kind: function
+  file: crates/scarab-compose/tests/compose.rs
+  line: 320
+  module: scarab-compose
+- name: detects_self_extends
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 130
+  module: scarab-compose
+- name: detects_self_includes
+  kind: function
+  file: crates/scarab-compose/tests/compose.rs
+  line: 187
+  module: scarab-compose
+- name: detects_self_referencing_snippet_inheritance
+  kind: function
+  file: crates/scarab-compose/tests/compose.rs
+  line: 306
+  module: scarab-compose
+- name: diamond_ancestor_composes_once_at_first_occurrence
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 83
+  module: scarab-compose
+- name: dirname
+  kind: function
+  file: crates/scarab-compose/src/expand.rs
+  line: 78
+  module: scarab-compose
+- name: duplicate_parent_in_one_list_collapses
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 109
+  module: scarab-compose
+- name: enforces_max_depth
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 143
+  module: scarab-compose
+- name: entry_names
+  kind: function
+  file: crates/scarab-compose/src/tamias.rs
+  line: 278
+  module: scarab-compose
+- name: expand
+  kind: module
+  file: crates/scarab-compose/src/lib.rs
+  line: 30
+  module: scarab-compose
+- name: expand
+  kind: function
+  file: crates/scarab-compose/src/lib.rs
+  line: 175
+  module: scarab-compose
+- name: extends
+  kind: module
+  file: crates/scarab-compose/src/lib.rs
+  line: 31
+  module: scarab-compose
+- name: extends_array_is_lowest_precedence_first
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 44
+  module: scarab-compose
+- name: extends_inside_nested_positions_is_inert_data
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 301
+  module: scarab-compose
+- name: extends_key_consumed_and_empty_forms
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 213
+  module: scarab-compose
+- name: fake_store_entry
+  kind: function
+  file: crates/scarab-compose/tests/compose.rs
+  line: 469
+  module: scarab-compose
+- name: fake_store_entry
+  kind: function
+  file: crates/scarab-compose/tests/extends.rs
+  line: 344
+  module: scarab-compose
+- name: fetch_bundle
+  kind: function
+  file: crates/scarab-compose/src/tamias.rs
+  line: 247
+  module: scarab-compose
+- name: fetchable_spec
+  kind: function
+  file: crates/scarab-compose/src/tamias.rs
+  line: 215
+  module: scarab-compose
+- name: from_env
+  kind: function
+  file: crates/scarab-compose/src/tamias.rs
+  line: 91
+  module: scarab-compose
+- name: full_path
+  kind: function
+  file: crates/scarab-compose/src/expand.rs
+  line: 100
+  module: scarab-compose
+- name: injects_a_dict_snippet_via_expression
+  kind: function
+  file: crates/scarab-compose/tests/compose.rs
+  line: 256
+  module: scarab-compose
+api_omitted: 97
+deps:
+- serde_json
+- serde_yaml_ng
+- tamias-core
+- tamias-install
+- tamias-store-local
+- thiserror
+- toml
+- tempfile
+- serde_json
+- expand
+- parse
+- tamias
+notes: ''
+verify:
+- crates/scarab-compose/Cargo.toml
+- crates/scarab-compose/src/expand.rs
+- crates/scarab-compose/src/extends.rs
+- crates/scarab-compose/src/lib.rs
+- crates/scarab-compose/src/parse.rs
+- crates/scarab-compose/src/tamias.rs
+- crates/scarab-compose/tests/compose.rs
+- crates/scarab-compose/tests/extends.rs
+provenance:
+  files:
+  - crates/scarab-compose/Cargo.toml
+  - crates/scarab-compose/src/expand.rs
+  - crates/scarab-compose/src/extends.rs
+  - crates/scarab-compose/src/lib.rs
+  - crates/scarab-compose/src/parse.rs
+  - crates/scarab-compose/src/tamias.rs
+  - crates/scarab-compose/tests/compose.rs
+  - crates/scarab-compose/tests/extends.rs
+  hashes:
+  - 8f47828762eb3dbb524fbeee835a6d7e85288317
+  - d9233998cd2c903cd709f9c3807e650225bae425
+  - 0c8be87fa562a9f3f4d7f5b5f67c2580de91ee6b
+  - 57b5096ea23476c423bdaa8c3cfd0e5a7881aada
+  - e8336350589231d3dfdb0cfbf26db4f0b9394e20
+  - e0422db5aecee1d3421b3ec15a302431bf161984
+  - 24c79ffe0c589cc516b2cd95799e1fc8c6e37523
+  - f47e896ac7fbcc23f0b70731f4e144d3ec30decd
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

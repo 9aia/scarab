@@ -1,0 +1,238 @@
+name: scarab-config-file
+path: crates/scarab-config-file/Cargo.toml
+purpose: File impl of ConfigSource — discovery (explicit → env → project → user dir) + extension dispatch to ConfigFormat impls
+api:
+- name: Cfg
+  kind: type
+  file: crates/scarab-config-file/src/layered.rs
+  line: 285
+  module: scarab-config-file
+- name: Cfg
+  kind: type
+  file: crates/scarab-config-file/src/lib.rs
+  line: 244
+  module: scarab-config-file
+- name: FileSource
+  kind: type
+  file: crates/scarab-config-file/src/lib.rs
+  line: 42
+  module: scarab-config-file
+- name: LayeredFileSource
+  kind: type
+  file: crates/scarab-config-file/src/layered.rs
+  line: 47
+  module: scarab-config-file
+- name: Repo
+  kind: type
+  file: crates/scarab-config-file/tests/dogfood.rs
+  line: 48
+  module: scarab-config-file
+- name: Server
+  kind: type
+  file: crates/scarab-config-file/src/layered.rs
+  line: 294
+  module: scarab-config-file
+- name: SturnConfig
+  kind: type
+  file: crates/scarab-config-file/tests/dogfood.rs
+  line: 42
+  module: scarab-config-file
+- name: arrays_replace_not_concat
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 332
+  module: scarab-config-file
+- name: candidates_with
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 67
+  module: scarab-config-file
+- name: cargo_config_toml_loads_via_explicit_path
+  kind: function
+  file: crates/scarab-config-file/tests/dogfood.rs
+  line: 94
+  module: scarab-config-file
+- name: config_source_trait_impl
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 475
+  module: scarab-config-file
+- name: config_source_trait_impl
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 385
+  module: scarab-config-file
+- name: earlier_dir_wins
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 313
+  module: scarab-config-file
+- name: env_path
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 162
+  module: scarab-config-file
+- name: env_path
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 157
+  module: scarab-config-file
+- name: env_path_is_top_layer
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 385
+  module: scarab-config-file
+- name: env_var_path
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 342
+  module: scarab-config-file
+- name: explicit_missing_is_hard_error_even_with_dir_files
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 375
+  module: scarab-config-file
+- name: explicit_path_and_missing_explicit
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 327
+  module: scarab-config-file
+- name: explicit_path_is_top_layer_not_replacement
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 359
+  module: scarab-config-file
+- name: extensionless_explicit_uses_preferred_format
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 357
+  module: scarab-config-file
+- name: for_app
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 238
+  module: scarab-config-file
+- name: for_app
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 225
+  module: scarab-config-file
+- name: format_for_path
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 188
+  module: scarab-config-file
+- name: format_for_path
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 169
+  module: scarab-config-file
+- name: kuda_toml_loads_as_value
+  kind: function
+  file: crates/scarab-config-file/tests/dogfood.rs
+  line: 65
+  module: scarab-config-file
+- name: layer_paths
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 132
+  module: scarab-config-file
+- name: layer_paths_with
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 94
+  module: scarab-config-file
+- name: layered
+  kind: module
+  file: crates/scarab-config-file/src/lib.rs
+  line: 26
+  module: scarab-config-file
+- name: layered_in
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 299
+  module: scarab-config-file
+- name: layered_source_merges_every_repo_config
+  kind: function
+  file: crates/scarab-config-file/tests/dogfood.rs
+  line: 113
+  module: scarab-config-file
+- name: load
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 262
+  module: scarab-config-file
+- name: load
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 271
+  module: scarab-config-file
+- name: load
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 128
+  module: scarab-config-file
+- name: load
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 231
+  module: scarab-config-file
+- name: load_path
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 146
+  module: scarab-config-file
+- name: load_with
+  kind: function
+  file: crates/scarab-config-file/src/layered.rs
+  line: 249
+  module: scarab-config-file
+- name: load_with
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 136
+  module: scarab-config-file
+- name: locate
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 120
+  module: scarab-config-file
+- name: locate_with
+  kind: function
+  file: crates/scarab-config-file/src/lib.rs
+  line: 96
+  module: scarab-config-file
+api_omitted: 32
+deps:
+- scarab-config
+- scarab-config-toml
+- scarab-config-yaml
+- serde
+- serde_json
+- tempfile
+- scarab-config
+- serde
+- serde_json
+- layered
+- scarab-config-toml
+- scarab-config-yaml
+notes: ''
+verify:
+- crates/scarab-config-file/Cargo.toml
+- crates/scarab-config-file/src/layered.rs
+- crates/scarab-config-file/src/lib.rs
+- crates/scarab-config-file/tests/dogfood.rs
+provenance:
+  files:
+  - crates/scarab-config-file/Cargo.toml
+  - crates/scarab-config-file/src/layered.rs
+  - crates/scarab-config-file/src/lib.rs
+  - crates/scarab-config-file/tests/dogfood.rs
+  hashes:
+  - 0209f8d82b3c3f64b4c4766661279ca78b2247f9
+  - e74595fc5c4f54ac4e68cd401852fde5c2744d78
+  - 56e57e3de251469902608897fd2ac6fb50e5653b
+  - 7f65f0c751811501392ac3881131ba563b04e82c
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

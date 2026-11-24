@@ -1,0 +1,74 @@
+name: scarab-template-minijinja
+path: crates/scarab-template-minijinja/Cargo.toml
+purpose: minijinja impl of scarab_template::TemplateEngine — Jinja-style {{ var }} / {% if %} syntax, sandboxed by default
+api:
+- name: MinijinjaEngine
+  kind: type
+  file: crates/scarab-template-minijinja/src/lib.rs
+  line: 16
+  module: scarab-template-minijinja
+- name: default
+  kind: function
+  file: crates/scarab-template-minijinja/src/lib.rs
+  line: 21
+  module: scarab-template-minijinja
+- name: name
+  kind: function
+  file: crates/scarab-template-minijinja/src/lib.rs
+  line: 40
+  module: scarab-template-minijinja
+- name: new
+  kind: function
+  file: crates/scarab-template-minijinja/src/lib.rs
+  line: 29
+  module: scarab-template-minijinja
+- name: render
+  kind: function
+  file: crates/scarab-template-minijinja/src/lib.rs
+  line: 44
+  module: scarab-template-minijinja
+- name: renders_vars_and_conditionals
+  kind: function
+  file: crates/scarab-template-minijinja/src/lib.rs
+  line: 62
+  module: scarab-template-minijinja
+- name: scarab-template-minijinja
+  kind: module
+  file: crates/scarab-template-minijinja/Cargo.toml
+  line: 1
+  module: scarab-template-minijinja
+- name: syntax_error_is_error
+  kind: function
+  file: crates/scarab-template-minijinja/src/lib.rs
+  line: 82
+  module: scarab-template-minijinja
+- name: tests
+  kind: module
+  file: crates/scarab-template-minijinja/src/lib.rs
+  line: 57
+  module: scarab-template-minijinja
+- name: undefined_var_renders_empty
+  kind: function
+  file: crates/scarab-template-minijinja/src/lib.rs
+  line: 75
+  module: scarab-template-minijinja
+deps:
+- minijinja
+- scarab-template
+- serde_json
+- scarab-template
+- serde_json
+notes: ''
+verify:
+- crates/scarab-template-minijinja/Cargo.toml
+- crates/scarab-template-minijinja/src/lib.rs
+provenance:
+  files:
+  - crates/scarab-template-minijinja/Cargo.toml
+  - crates/scarab-template-minijinja/src/lib.rs
+  hashes:
+  - 72bdc1faddb530e4364ba6acaaa0eeeccafce329
+  - cdc92ab30261cf8d796c223dc55b30b49fd78161
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

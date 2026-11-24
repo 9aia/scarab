@@ -1,0 +1,30 @@
+[package]
+name = "scarab-compose"
+description = "Document composition — include/snippet expansion over YAML/TOML/JSON trees into serde_json::Value"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["tamias"]
+# `tamias:` include refs resolve against the tamias install store and
+# fetch ref-shaped specs on a miss through `tamias-install` — the same
+# crates peregrin's loader uses (workspace-pinned git deps).
+tamias = ["dep:tamias-core", "dep:tamias-store-local", "dep:tamias-install"]
+
+[dependencies]
+serde_json.workspace = true
+serde_yaml_ng.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+tamias-core = { workspace = true, optional = true }
+tamias-store-local = { workspace = true, optional = true }
+tamias-install = { workspace = true, optional = true }
+
+[dev-dependencies]
+tempfile.workspace = true

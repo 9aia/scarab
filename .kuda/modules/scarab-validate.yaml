@@ -1,0 +1,102 @@
+name: scarab-validate
+path: crates/scarab-validate/Cargo.toml
+purpose: JSON Schema validation over serde_json::Value — compile once, validate many
+api:
+- name: PARAMS_SCHEMA_FILE
+  kind: const
+  file: crates/scarab-validate/src/lib.rs
+  line: 27
+  module: scarab-validate
+- name: Schema
+  kind: type
+  file: crates/scarab-validate/src/lib.rs
+  line: 30
+  module: scarab-validate
+- name: Violation
+  kind: type
+  file: crates/scarab-validate/src/lib.rs
+  line: 64
+  module: scarab-validate
+- name: cfg_map
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 104
+  module: scarab-validate
+- name: compile
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 40
+  module: scarab-validate
+- name: display_prefixes_path_and_leaves_root_bare
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 180
+  module: scarab-validate
+- name: fmt
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 73
+  module: scarab-validate
+- name: missing_required_rejects
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 132
+  module: scarab-validate
+- name: scarab-validate
+  kind: module
+  file: crates/scarab-validate/Cargo.toml
+  line: 1
+  module: scarab-validate
+- name: schema
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 90
+  module: scarab-validate
+- name: tests
+  kind: module
+  file: crates/scarab-validate/src/lib.rs
+  line: 83
+  module: scarab-validate
+- name: typoed_key_rejects_under_additional_properties_false
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 123
+  module: scarab-validate
+- name: unusable_schema_is_an_error_not_a_pass
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 174
+  module: scarab-validate
+- name: valid_config_has_no_violations
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 112
+  module: scarab-validate
+- name: validate
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 48
+  module: scarab-validate
+- name: wrong_type_and_bounds_reject
+  kind: function
+  file: crates/scarab-validate/src/lib.rs
+  line: 143
+  module: scarab-validate
+deps:
+- jsonschema
+- serde_json
+- serde_json
+notes: ''
+verify:
+- crates/scarab-validate/Cargo.toml
+- crates/scarab-validate/src/lib.rs
+provenance:
+  files:
+  - crates/scarab-validate/Cargo.toml
+  - crates/scarab-validate/src/lib.rs
+  hashes:
+  - f5c47c853c5ab58d7567c821b649d0bf127f1db9
+  - 639b33c9e75b87fbe0253c45e9dedbb3824fc79c
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

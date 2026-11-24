@@ -1,0 +1,65 @@
+name: docs
+path: docs/package.json
+purpose: documentation corpus — pages as records, backticked refs as edges
+api: []
+deps: []
+notes: ''
+verify:
+- docs/.vitepress/theme/index.ts
+- docs/package.json
+- docs/README.md
+- docs/explanation/architecture.md
+- docs/explanation/boundaries.md
+- docs/explanation/concepts.md
+- docs/explanation/decisions.md
+- docs/explanation/index.md
+- docs/how-to/customize-config-discovery.md
+- docs/how-to/deploy-a-template-pack.md
+provenance:
+  files:
+  - docs/.vitepress/theme/index.ts
+  - docs/README.md
+  - docs/explanation/architecture.md
+  - docs/explanation/boundaries.md
+  - docs/explanation/concepts.md
+  - docs/explanation/decisions.md
+  - docs/explanation/index.md
+  - docs/how-to/customize-config-discovery.md
+  - docs/how-to/deploy-a-template-pack.md
+  - docs/how-to/index.md
+  - docs/how-to/layered-config.md
+  - docs/how-to/write-a-template-pack.md
+  - docs/index.md
+  - docs/package.json
+  - docs/reference/config-port.md
+  - docs/reference/crates.md
+  - docs/reference/driver.md
+  - docs/reference/index.md
+  - docs/reference/template-packs.md
+  - docs/reference/testkit.md
+  - docs/tutorials/getting-started.md
+  hashes:
+  - 73ba647e82ab0f8fec74d915003400b21fa6898b
+  - 8813842cf45b25ebf43af0eb898b670f4fd206dd
+  - f0ec94194435b9fb8ed343c71a75c805365189db
+  - a94d795f8c5ccffafaaa4c7cbfe2ca78bfe95c70
+  - f79d18817cdb5abe1d8b72580d5663e13ecf1cd6
+  - d076a6f2dbb7c5409e3930a6f4816b39675c8b4e
+  - c70b63b96360a2b152e3b2fbd8c6b5b34e990cfd
+  - 0ef8d987c9d9a29ebd03e84d138cb34b4058fa83
+  - f8d170b2d5497a14fe1d70c32c65682fb6abf1b7
+  - 144c7555a35c57a01da7412f6f5160f8485c3d91
+  - 9f9af2c3deb5fa8dd3fdbb26910e0b0139a23734
+  - 317c0ecc72995954131c57385280c0eeb03f477a
+  - 0de5a6c1e7819d5dcbac2a8e47a56af637390e47
+  - 9a9d2edb814be937c8466da8811693a59104a416
+  - a12dc2f5d5dd66b9d5981e6e58837fe9477d81ef
+  - b881f3c5218bdbafc13a0d8a3163b4a198353f46
+  - 2282e537580ca9ababc40a8be5492ec3d5e3d928
+  - bdfe4e60c66c2d8dbc4c56c234516aabf460638b
+  - e281f8c6eee17a9e9b55afc11affd13364d862c9
+  - cc716ca9a3db0397cc310799f7ad1dd16fdcf281
+  - 326e54c493ae9a2ed0ce17eb66ae8f8d4b53ab2e
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

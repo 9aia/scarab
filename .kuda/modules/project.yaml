@@ -1,0 +1,37 @@
+name: project
+path: project/BACKLOG.md
+purpose: myco work ledger — tasks, ADRs, issues, plans, handoffs
+api: []
+deps: []
+notes: ''
+verify:
+- project/BACKLOG.md
+- project/DONE.md
+- project/TODO.md
+- project/index.md
+- project/plans/pl-0001-scarab-compose-implementation.md
+- project/plans/pl-0002-scarab-validate-implementation.md
+- project/proposals/proposal-0001-scarab-compose-document-level-composition-kernel.md
+- project/proposals/proposal-0002-scarab-validate-json-schema-validation-for-untyped-documents.md
+provenance:
+  files:
+  - project/BACKLOG.md
+  - project/DONE.md
+  - project/TODO.md
+  - project/index.md
+  - project/plans/pl-0001-scarab-compose-implementation.md
+  - project/plans/pl-0002-scarab-validate-implementation.md
+  - project/proposals/proposal-0001-scarab-compose-document-level-composition-kernel.md
+  - project/proposals/proposal-0002-scarab-validate-json-schema-validation-for-untyped-documents.md
+  hashes:
+  - 7b313fd8c4b4b0fb3f250e9f3246efa38b2975e8
+  - 043c72083824501be0dd939539075300db2c03eb
+  - 1d2ea8c2549c94e31a300fc752174fae39459c1a
+  - c9404a735285e131c3e2b5594cf926b47414b968
+  - ebe6c9d3cabdd8a663c717e6ca046c43f250d15d
+  - 062edf2695f276b33a16cb75a605a3d8b25d73bc
+  - 45f6bc74ae13ea2248386434a5595980df88893b
+  - 90eba56b5eacb082c17fef23c774bb02e89b1f68
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

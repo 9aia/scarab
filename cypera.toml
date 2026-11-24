@@ -12,6 +12,8 @@
 "scarab-config-toml" = "adapter"
 "scarab-config-yaml" = "adapter"
 "scarab-template-minijinja" = "adapter"
+"scarab-compose" = "engine"
+"scarab-validate" = "engine"
 "tamias-driver-template" = "driver"
 "scarab-testkit" = "testkit"
 "scarab-xtask" = "tooling"

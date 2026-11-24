@@ -1,0 +1,64 @@
+name: scarab-config-toml
+path: crates/scarab-config-toml/Cargo.toml
+purpose: TOML impl of ConfigFormat — parse/render any serde config model
+api:
+- name: Cfg
+  kind: type
+  file: crates/scarab-config-toml/src/lib.rs
+  line: 38
+  module: scarab-config-toml
+- name: TomlFormat
+  kind: type
+  file: crates/scarab-config-toml/src/lib.rs
+  line: 11
+  module: scarab-config-toml
+- name: extensions
+  kind: function
+  file: crates/scarab-config-toml/src/lib.rs
+  line: 17
+  module: scarab-config-toml
+- name: parse
+  kind: function
+  file: crates/scarab-config-toml/src/lib.rs
+  line: 21
+  module: scarab-config-toml
+- name: parse_and_render_round_trip
+  kind: function
+  file: crates/scarab-config-toml/src/lib.rs
+  line: 44
+  module: scarab-config-toml
+- name: render
+  kind: function
+  file: crates/scarab-config-toml/src/lib.rs
+  line: 25
+  module: scarab-config-toml
+- name: scarab-config-toml
+  kind: module
+  file: crates/scarab-config-toml/Cargo.toml
+  line: 1
+  module: scarab-config-toml
+- name: tests
+  kind: module
+  file: crates/scarab-config-toml/src/lib.rs
+  line: 32
+  module: scarab-config-toml
+deps:
+- scarab-config
+- serde
+- toml
+- scarab-config
+- serde
+notes: ''
+verify:
+- crates/scarab-config-toml/Cargo.toml
+- crates/scarab-config-toml/src/lib.rs
+provenance:
+  files:
+  - crates/scarab-config-toml/Cargo.toml
+  - crates/scarab-config-toml/src/lib.rs
+  hashes:
+  - c34b253e83982e72d9d9742a8b51e8f3706d7b32
+  - 026fa2d397e8ed8a0f2f07c72bdc40ebe0a226d6
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

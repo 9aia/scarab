@@ -1,0 +1,64 @@
+name: scarab-xtask
+path: xtask/Cargo.toml
+purpose: 'Repo chores: check / test / coverage / install / package / smoke / site'
+api:
+- name: have
+  kind: function
+  file: xtask/src/main.rs
+  line: 34
+  module: scarab-xtask
+- name: have_cargo_sub
+  kind: function
+  file: xtask/src/main.rs
+  line: 25
+  module: scarab-xtask
+- name: main
+  kind: function
+  file: xtask/src/main.rs
+  line: 66
+  module: scarab-xtask
+- name: run
+  kind: function
+  file: xtask/src/main.rs
+  line: 16
+  module: scarab-xtask
+- name: run_in
+  kind: function
+  file: xtask/src/main.rs
+  line: 43
+  module: scarab-xtask
+- name: scarab-xtask
+  kind: module
+  file: xtask/Cargo.toml
+  line: 1
+  module: scarab-xtask
+- name: site
+  kind: function
+  file: xtask/src/main.rs
+  line: 56
+  module: scarab-xtask
+- name: tests
+  kind: module
+  file: xtask/src/main.rs
+  line: 130
+  module: scarab-xtask
+- name: workspace_manifest_parses
+  kind: function
+  file: xtask/src/main.rs
+  line: 132
+  module: scarab-xtask
+deps: []
+notes: ''
+verify:
+- xtask/Cargo.toml
+- xtask/src/main.rs
+provenance:
+  files:
+  - xtask/Cargo.toml
+  - xtask/src/main.rs
+  hashes:
+  - 99cc878dd7579834fbd895da3f0cd86bb928ec22
+  - 1bf2917f100f2a26becb2a544452245d98665425
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

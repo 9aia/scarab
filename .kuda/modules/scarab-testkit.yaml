@@ -1,0 +1,267 @@
+name: scarab-testkit
+path: crates/scarab-testkit/Cargo.toml
+purpose: Conformance suites + golden fixtures for the scarab config ports — assert_* functions any ConfigFormat/ConfigSource impl runs to prove itself
+api:
+- name: DiscoveryCase
+  kind: type
+  file: crates/scarab-testkit/src/source.rs
+  line: 84
+  module: scarab-testkit
+- name: EnvAwareSource
+  kind: trait
+  file: crates/scarab-testkit/src/source.rs
+  line: 36
+  module: scarab-testkit
+- name: EnvLookup
+  kind: type
+  file: crates/scarab-testkit/src/source.rs
+  line: 30
+  module: scarab-testkit
+- name: EnvValue
+  kind: type
+  file: crates/scarab-testkit/src/source.rs
+  line: 61
+  module: scarab-testkit
+- name: Expect
+  kind: type
+  file: crates/scarab-testkit/src/source.rs
+  line: 71
+  module: scarab-testkit
+- name: FormatCase
+  kind: type
+  file: crates/scarab-testkit/src/format.rs
+  line: 13
+  module: scarab-testkit
+- name: MergeCase
+  kind: type
+  file: crates/scarab-testkit/src/merge.rs
+  line: 13
+  module: scarab-testkit
+- name: OverrideCase
+  kind: type
+  file: crates/scarab-testkit/src/merge.rs
+  line: 46
+  module: scarab-testkit
+- name: PreparedCase
+  kind: type
+  file: crates/scarab-testkit/src/source.rs
+  line: 165
+  module: scarab-testkit
+- name: ServerConfig
+  kind: type
+  file: crates/scarab-testkit/src/model.rs
+  line: 27
+  module: scarab-testkit
+- name: TemplateCase
+  kind: type
+  file: crates/scarab-testkit/src/template.rs
+  line: 19
+  module: scarab-testkit
+- name: TemplateExpect
+  kind: type
+  file: crates/scarab-testkit/src/template.rs
+  line: 11
+  module: scarab-testkit
+- name: TestConfig
+  kind: type
+  file: crates/scarab-testkit/src/model.rs
+  line: 13
+  module: scarab-testkit
+- name: apply_overrides_conformance_cases
+  kind: function
+  file: crates/scarab-testkit/tests/conformance.rs
+  line: 349
+  module: scarab-testkit
+- name: assert_apply_overrides_conformance
+  kind: function
+  file: crates/scarab-testkit/src/merge.rs
+  line: 62
+  module: scarab-testkit
+- name: assert_config_format_conformance
+  kind: function
+  file: crates/scarab-testkit/src/format.rs
+  line: 51
+  module: scarab-testkit
+- name: assert_config_source_conformance
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 296
+  module: scarab-testkit
+- name: assert_config_source_error
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 311
+  module: scarab-testkit
+- name: assert_discovery_conformance
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 260
+  module: scarab-testkit
+- name: assert_merge_value_conformance
+  kind: function
+  file: crates/scarab-testkit/src/merge.rs
+  line: 30
+  module: scarab-testkit
+- name: assert_template_engine_conformance
+  kind: function
+  file: crates/scarab-testkit/src/template.rs
+  line: 65
+  module: scarab-testkit
+- name: assert_template_renders
+  kind: function
+  file: crates/scarab-testkit/src/template.rs
+  line: 97
+  module: scarab-testkit
+- name: bad
+  kind: function
+  file: crates/scarab-testkit/src/format.rs
+  line: 37
+  module: scarab-testkit
+- name: config_source_minimal_contract
+  kind: function
+  file: crates/scarab-testkit/tests/conformance.rs
+  line: 308
+  module: scarab-testkit
+- name: dir
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 128
+  module: scarab-testkit
+- name: dirs
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 182
+  module: scarab-testkit
+- name: env_literal
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 142
+  module: scarab-testkit
+- name: env_lookup
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 200
+  module: scarab-testkit
+- name: env_path
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 135
+  module: scarab-testkit
+- name: error
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 107
+  module: scarab-testkit
+- name: error
+  kind: function
+  file: crates/scarab-testkit/src/template.rs
+  line: 48
+  module: scarab-testkit
+- name: explicit
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 149
+  module: scarab-testkit
+- name: explicit
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 188
+  module: scarab-testkit
+- name: file
+  kind: function
+  file: crates/scarab-testkit/src/source.rs
+  line: 121
+  module: scarab-testkit
+- name: file_source
+  kind: function
+  file: crates/scarab-testkit/tests/conformance.rs
+  line: 33
+  module: scarab-testkit
+- name: file_source_earlier_dir_wins
+  kind: function
+  file: crates/scarab-testkit/tests/conformance.rs
+  line: 107
+  module: scarab-testkit
+- name: file_source_env_var_path
+  kind: function
+  file: crates/scarab-testkit/tests/conformance.rs
+  line: 150
+  module: scarab-testkit
+- name: file_source_explicit_path_wins
+  kind: function
+  file: crates/scarab-testkit/tests/conformance.rs
+  line: 123
+  module: scarab-testkit
+- name: file_source_missing_explicit_is_error
+  kind: function
+  file: crates/scarab-testkit/tests/conformance.rs
+  line: 139
+  module: scarab-testkit
+- name: file_source_nothing_found_errors
+  kind: function
+  file: crates/scarab-testkit/tests/conformance.rs
+  line: 166
+  module: scarab-testkit
+api_omitted: 33
+deps:
+- scarab-config
+- scarab-config-file
+- scarab-template
+- serde
+- serde_json
+- tempfile
+- scarab-config-toml
+- scarab-config-yaml
+- scarab-template-minijinja
+- scarab-template-minijinja
+- serde_json
+- scarab-config
+- scarab-config-file
+- scarab-config-toml
+- scarab-config-yaml
+- scarab-template
+- serde
+- fixture
+- format
+- merge
+- model
+- source
+- template
+notes: ''
+verify:
+- crates/scarab-testkit/Cargo.toml
+- crates/scarab-testkit/src/fixture.rs
+- crates/scarab-testkit/src/format.rs
+- crates/scarab-testkit/src/lib.rs
+- crates/scarab-testkit/src/merge.rs
+- crates/scarab-testkit/src/model.rs
+- crates/scarab-testkit/src/source.rs
+- crates/scarab-testkit/src/template.rs
+- crates/scarab-testkit/tests/conformance.rs
+- crates/scarab-testkit/tests/template.rs
+provenance:
+  files:
+  - crates/scarab-testkit/Cargo.toml
+  - crates/scarab-testkit/src/fixture.rs
+  - crates/scarab-testkit/src/format.rs
+  - crates/scarab-testkit/src/lib.rs
+  - crates/scarab-testkit/src/merge.rs
+  - crates/scarab-testkit/src/model.rs
+  - crates/scarab-testkit/src/source.rs
+  - crates/scarab-testkit/src/template.rs
+  - crates/scarab-testkit/tests/conformance.rs
+  - crates/scarab-testkit/tests/template.rs
+  hashes:
+  - c80e74ef565cba88d96d5ca5972ead1a4f81a030
+  - df2d965b00521257e605ebda47241b532e978421
+  - 7f41d1b9dd7f2abed22b1c4c12fbac7196f9adf0
+  - 4959bf18851354daa94156e03ec5aec641d3ca56
+  - 10fcde3c9044f2109461959223fcb4378eac2295
+  - b879495e084b0ec1d12050ff56385f0e24d152fe
+  - e9d3d63e0a05b3309a268b53f6a10d86d000a0b7
+  - cf4b5bf7af9b55bff8c4af01b625c1828f767515
+  - aaa69c536ac53cd95ed81585576a44971b3a2b43
+  - a13fb8135ca676a373c88dc4e5b3e51ab4fb06c1
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4

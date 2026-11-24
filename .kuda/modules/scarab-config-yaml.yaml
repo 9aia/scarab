@@ -1,0 +1,64 @@
+name: scarab-config-yaml
+path: crates/scarab-config-yaml/Cargo.toml
+purpose: YAML impl of ConfigFormat — parse/render any serde config model
+api:
+- name: Cfg
+  kind: type
+  file: crates/scarab-config-yaml/src/lib.rs
+  line: 41
+  module: scarab-config-yaml
+- name: YamlFormat
+  kind: type
+  file: crates/scarab-config-yaml/src/lib.rs
+  line: 14
+  module: scarab-config-yaml
+- name: extensions
+  kind: function
+  file: crates/scarab-config-yaml/src/lib.rs
+  line: 20
+  module: scarab-config-yaml
+- name: parse
+  kind: function
+  file: crates/scarab-config-yaml/src/lib.rs
+  line: 24
+  module: scarab-config-yaml
+- name: parse_and_render_round_trip
+  kind: function
+  file: crates/scarab-config-yaml/src/lib.rs
+  line: 47
+  module: scarab-config-yaml
+- name: render
+  kind: function
+  file: crates/scarab-config-yaml/src/lib.rs
+  line: 28
+  module: scarab-config-yaml
+- name: scarab-config-yaml
+  kind: module
+  file: crates/scarab-config-yaml/Cargo.toml
+  line: 1
+  module: scarab-config-yaml
+- name: tests
+  kind: module
+  file: crates/scarab-config-yaml/src/lib.rs
+  line: 35
+  module: scarab-config-yaml
+deps:
+- scarab-config
+- serde
+- serde_yaml_ng
+- scarab-config
+- serde
+notes: ''
+verify:
+- crates/scarab-config-yaml/Cargo.toml
+- crates/scarab-config-yaml/src/lib.rs
+provenance:
+  files:
+  - crates/scarab-config-yaml/Cargo.toml
+  - crates/scarab-config-yaml/src/lib.rs
+  hashes:
+  - 9995b5cd553f7b3822d2d6f2aff0f535806c55d9
+  - c7ff927e72e4131b1edd81de4644bd3d046f3651
+  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
+  generated_at: '1795485135'
+  generator: kuda-template/0.1.4
