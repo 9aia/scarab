@@ -57,3 +57,10 @@ scarab-config-{toml,yaml} already exist for the parse leg.
 - No fetch semantics changes — tamias-install stays the fetch
   pipeline.
 - No campaign `nodes:` dedupe — that's peregrin's model concern.
+
+## Sibling candidate (noted, not scoped)
+
+`peregrin-loader/params_schema.rs` — JSON-Schema validation of
+untyped config mappings — is the same trap pattern. If spec packs
+need self-validation, a `scarab-validate` crate is the natural
+third leg; evaluate after compose lands.
