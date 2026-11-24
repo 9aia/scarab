@@ -1,7 +1,7 @@
 +++
 id = "P-001"
 title = "scarab-compose — document-level composition kernel"
-status = "open"
+status = "in-progress"
 created = "2026-11-24"
 owner = "devin"
 priority = "med"
