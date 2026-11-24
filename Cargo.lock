@@ -1367,7 +1367,7 @@ dependencies = [
 
 [[package]]
 name = "scarab-compose"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde_json",
  "serde_yaml_ng",
@@ -1381,7 +1381,7 @@ dependencies = [
 
 [[package]]
 name = "scarab-config"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -1389,7 +1389,7 @@ dependencies = [
 
 [[package]]
 name = "scarab-config-file"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "scarab-config",
  "scarab-config-toml",
@@ -1401,7 +1401,7 @@ dependencies = [
 
 [[package]]
 name = "scarab-config-toml"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "scarab-config",
  "serde",
@@ -1410,7 +1410,7 @@ dependencies = [
 
 [[package]]
 name = "scarab-config-yaml"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "scarab-config",
  "serde",
@@ -1419,7 +1419,7 @@ dependencies = [
 
 [[package]]
 name = "scarab-template"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -1428,7 +1428,7 @@ dependencies = [
 
 [[package]]
 name = "scarab-template-minijinja"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "minijinja",
  "scarab-template",
@@ -1437,7 +1437,7 @@ dependencies = [
 
 [[package]]
 name = "scarab-testkit"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "scarab-config",
  "scarab-config-file",
@@ -1452,7 +1452,7 @@ dependencies = [
 
 [[package]]
 name = "scarab-validate"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "jsonschema",
  "serde_json",
@@ -1460,7 +1460,7 @@ dependencies = [
 
 [[package]]
 name = "scarab-xtask"
-version = "0.1.0"
+version = "0.2.0"
 
 [[package]]
 name = "schannel"
@@ -1827,7 +1827,7 @@ dependencies = [
 
 [[package]]
 name = "tamias-driver-template"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "scarab-config",
  "scarab-template",
