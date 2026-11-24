@@ -1,0 +1,4 @@
+port: 2
+tags: [c]
+server:
+  tls: true

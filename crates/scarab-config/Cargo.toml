@@ -11,7 +11,11 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-serde_json.workspace = true
+# Deliberately not `workspace = true`: the workspace dep carries
+# `preserve_order`, which would leak into every consumer's serde_json
+# (pavo's surface tests key on sorted request JSON). Config merge is
+# order-agnostic — it must not impose doc-order semantics downstream.
+serde_json = "1.0"
 
 [dev-dependencies]
 serde.workspace = true

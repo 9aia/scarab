@@ -188,14 +188,14 @@ fn layered_source_merges_fixtures_low_to_high() {
                 fixture_text("layered/user/myapp.yaml"),
             )
             .file(
-                "layered/project/myapp.yaml",
-                fixture_text("layered/project/myapp.yaml"),
+                "layered/repo/myapp.yaml",
+                fixture_text("layered/repo/myapp.yaml"),
             )
             .file(
                 "layered/extra/override.yaml",
                 fixture_text("layered/extra/override.yaml"),
             )
-            .dir("layered/project")
+            .dir("layered/repo")
             .dir("layered/user")
             .explicit("layered/extra/override.yaml"),
         layered_source,

@@ -5,27 +5,27 @@ api:
 - name: ConfigFormat
   kind: trait
   file: crates/scarab-config/src/lib.rs
-  line: 40
+  line: 43
   module: scarab-config
 - name: ConfigSource
   kind: trait
   file: crates/scarab-config/src/lib.rs
-  line: 31
+  line: 34
   module: scarab-config
 - name: Discovery
   kind: type
   file: crates/scarab-config/src/lib.rs
-  line: 109
+  line: 162
   module: scarab-config
 - name: F
   kind: type
   file: crates/scarab-config/src/lib.rs
-  line: 215
+  line: 294
   module: scarab-config
 - name: ToyCfg
   kind: type
   file: crates/scarab-config/src/lib.rs
-  line: 175
+  line: 228
   module: scarab-config
 - name: apply_overrides
   kind: function
@@ -40,17 +40,17 @@ api:
 - name: bare
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 137
+  line: 190
   module: scarab-config
 - name: dirs
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 161
+  line: 214
   module: scarab-config
 - name: discovery_for_app_defaults
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 181
+  line: 234
   module: scarab-config
 - name: dotted_overrides_replace_scalars_in_the_way
   kind: function
@@ -62,50 +62,60 @@ api:
   file: crates/scarab-config/src/merge.rs
   line: 131
   module: scarab-config
+- name: env_overrides
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 105
+  module: scarab-config
+- name: env_overrides_prefix_suffix_and_json_values
+  kind: function
+  file: crates/scarab-config/src/lib.rs
+  line: 267
+  module: scarab-config
 - name: env_var
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 147
+  line: 200
   module: scarab-config
 - name: expand_tilde
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 86
+  line: 139
   module: scarab-config
 - name: expand_tilde_rules
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 197
+  line: 250
   module: scarab-config
 - name: extensions
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 217
+  line: 296
   module: scarab-config
 - name: for_app
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 126
+  line: 179
   module: scarab-config
 - name: format_for
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 61
+  line: 64
   module: scarab-config
 - name: format_for_matches_extension
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 214
+  line: 293
   module: scarab-config
 - name: home_dir
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 75
+  line: 128
   module: scarab-config
 - name: merge
   kind: module
   file: crates/scarab-config/src/lib.rs
-  line: 26
+  line: 29
   module: scarab-config
 - name: merge_value
   kind: function
@@ -125,12 +135,12 @@ api:
 - name: parse
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 220
+  line: 299
   module: scarab-config
 - name: render
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 223
+  line: 302
   module: scarab-config
 - name: scalars_and_arrays_replace
   kind: function
@@ -150,7 +160,7 @@ api:
 - name: tests
   kind: module
   file: crates/scarab-config/src/lib.rs
-  line: 169
+  line: 222
   module: scarab-config
 - name: tests
   kind: module
@@ -160,12 +170,12 @@ api:
 - name: user_config_dir
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 100
+  line: 153
   module: scarab-config
 - name: without_env
   kind: function
   file: crates/scarab-config/src/lib.rs
-  line: 154
+  line: 207
   module: scarab-config
 deps:
 - serde_json
@@ -185,8 +195,8 @@ provenance:
   - crates/scarab-config/src/merge.rs
   hashes:
   - 232540f93386359880cfdd9f8e7826889b64c868
-  - 1e8a9539f33198fe1fdb59c5b9f7b424abe62db1
+  - 76932634cb4b3583710ba97d5c98072f74456970
   - 37fae855cbe52a28a1bf36d5161b5e2e1e7131ce
-  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
-  generated_at: '1795485135'
+  commit_sha: 85e50d57110b2f785a5c11d8cf55de7737d67257
+  generated_at: '1795494225'
   generator: kuda-template/0.1.4

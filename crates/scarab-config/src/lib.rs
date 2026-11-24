@@ -21,7 +21,10 @@
 //! uses: explicit path → `$<NAME>_CONFIG` → project dir → user config
 //! dir, earlier formats winning ties (YAML preferred by convention).
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+
+use serde_json::Value;
 
 mod merge;
 
@@ -67,6 +70,56 @@ pub fn format_for<'a, T>(
         .iter()
         .copied()
         .find(|f| f.extensions().contains(&ext))
+}
+
+/// Env-var config overlay → flat dotted-key → [`Value`] map — the
+/// `<PREFIX>_*` convention (pavo's `PAVO_CONFIG_*`): vars named
+/// `prefix` + suffix map to config keys where the suffix **lowercases**,
+/// `__` separates dotted segments (a single `_` stays literal —
+/// `PREFIX_REFRESH_MS` → `refresh_ms`, `PREFIX_MYCO__THEME` →
+/// `myco.theme`), and each value parses as JSON when possible, else
+/// stays a string. The bare path-style var (`PAVO_CONFIG` itself, no
+/// trailing-underscore suffix) is not an override.
+///
+/// `prefix` carries its trailing underscore (`"PAVO_CONFIG_"`). Feed
+/// the result to [`apply_overrides`] as the highest-precedence layer —
+/// it returns the same flat dotted-key shape that function expects.
+///
+/// ```
+/// use std::collections::BTreeMap;
+/// use scarab_config::env_overrides;
+///
+/// let env = BTreeMap::from([
+///     ("PAVO_CONFIG_THEME".to_string(), "\"neon\"".to_string()),
+///     ("PAVO_CONFIG_REFRESH_MS".to_string(), "250".to_string()),
+///     ("PAVO_CONFIG_MYCO__EDITOR".to_string(), "vim".to_string()),
+///     ("PAVO_CONFIG".to_string(), "/tmp/x.toml".to_string()),
+/// ]);
+/// let over = env_overrides(&env, "PAVO_CONFIG_");
+/// assert_eq!(over["theme"].as_str(), Some("neon"));
+/// assert_eq!(over["refresh_ms"].as_i64(), Some(250));
+/// assert_eq!(over["myco.editor"].as_str(), Some("vim"));
+/// assert!(!over.contains_key("PAVO_CONFIG"));
+/// ```
+#[must_use]
+pub fn env_overrides(env: &BTreeMap<String, String>, prefix: &str) -> BTreeMap<String, Value> {
+    let mut out = BTreeMap::new();
+    for (name, raw) in env {
+        let Some(suffix) = name.strip_prefix(prefix) else {
+            continue;
+        };
+        if suffix.is_empty() {
+            continue;
+        }
+        let key = suffix
+            .split("__")
+            .map(str::to_lowercase)
+            .collect::<Vec<_>>()
+            .join(".");
+        let value = serde_json::from_str::<Value>(raw).unwrap_or_else(|_| Value::from(raw.clone()));
+        out.insert(key, value);
+    }
+    out
 }
 
 /// `$HOME`, else `$USERPROFILE`, else `/` — the workspace `home_dir`
@@ -208,6 +261,32 @@ mod tests {
         );
         assert_eq!(expand_tilde(Path::new("~user/x")), PathBuf::from("~user/x"));
         assert_eq!(user_config_dir("myco"), PathBuf::from("~/.config/myco"));
+    }
+
+    #[test]
+    fn env_overrides_prefix_suffix_and_json_values() {
+        use serde_json::json;
+        let env = BTreeMap::from([
+            ("PAVO_CONFIG_THEME".to_string(), "\"neon\"".to_string()),
+            ("PAVO_CONFIG_REFRESH_MS".to_string(), "250".to_string()),
+            ("PAVO_CONFIG_STATUSBAR".to_string(), "false".to_string()),
+            ("PAVO_CONFIG_MYCO__EDITOR".to_string(), "vim".to_string()),
+            ("PAVO_CONFIG".to_string(), "/tmp/x.toml".to_string()),
+            ("OTHER_VAR".to_string(), "1".to_string()),
+        ]);
+        let over = env_overrides(&env, "PAVO_CONFIG_");
+        assert_eq!(
+            over,
+            BTreeMap::from([
+                ("myco.editor".to_string(), json!("vim")),
+                ("refresh_ms".to_string(), json!(250)),
+                ("statusbar".to_string(), json!(false)),
+                ("theme".to_string(), json!("neon")),
+            ])
+        );
+        // empty env / unmatched prefix → empty map
+        assert!(env_overrides(&BTreeMap::new(), "PAVO_CONFIG_").is_empty());
+        assert!(env_overrides(&env, "NOPE_").is_empty());
     }
 
     #[test]

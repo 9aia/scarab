@@ -29,6 +29,13 @@ cd "$ROOT"
 # tool dirs in ourselves (same trick scripts/ci.sh uses).
 export PATH="$HOME/.bun/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
+# pre-push exports GIT_DIR/GIT_WORK_TREE for the hook; inside the
+# materialized docs/ worktree they would point git at the *main*
+# worktree's index, so `docs:check`'s drift diff compares the wrong
+# tree and always fails. Drop them — every git call below rediscovers
+# its own repo.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX GIT_QUARANTINE_PATH
+
 cypera_bin() {
   if command -v cypera >/dev/null 2>&1; then
     cypera "$@"
