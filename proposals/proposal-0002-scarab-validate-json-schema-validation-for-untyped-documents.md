@@ -1,7 +1,7 @@
 +++
 id = "P-002"
 title = "scarab-validate — JSON-Schema validation for untyped documents"
-status = "open"
+status = "in-progress"
 created = "2026-11-24"
 owner = "devin"
 priority = "med"
