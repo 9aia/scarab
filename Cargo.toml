@@ -50,9 +50,9 @@ sha2 = "0.10"
 thiserror = "2.0"
 
 # `tamias:` include refs in scarab-compose — same rev pin peregrin uses.
-tamias-core = { git = "ssh://git@github.com/9aia/tamias.git", rev = "255f44cbb530fd11a38b4fee5356524bf927e402", version = "0.1" }
-tamias-store-local = { git = "ssh://git@github.com/9aia/tamias.git", rev = "255f44cbb530fd11a38b4fee5356524bf927e402", version = "0.1" }
-tamias-install = { git = "ssh://git@github.com/9aia/tamias.git", rev = "255f44cbb530fd11a38b4fee5356524bf927e402", version = "0.1" }
+tamias-core = { git = "ssh://git@github.com/9aia/tamias.git", rev = "cbbc0e048cd5f28358245dd3555bee274b8da19d", version = "0.3.0" }
+tamias-store-local = { git = "ssh://git@github.com/9aia/tamias.git", rev = "cbbc0e048cd5f28358245dd3555bee274b8da19d", version = "0.3.0" }
+tamias-install = { git = "ssh://git@github.com/9aia/tamias.git", rev = "cbbc0e048cd5f28358245dd3555bee274b8da19d", version = "0.3.0" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
