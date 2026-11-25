@@ -123,6 +123,13 @@ never touches the filesystem:
   (`"server.port" → 8080`) set leaves, creating intermediate objects;
   a scalar sitting where a path needs to descend is replaced by an
   object. Call after the file layers are merged
+* `env_overrides(env, prefix)` — `<PREFIX>_*` env vars → flat
+  dotted keys: the suffix lowercases (`__` separates path
+  segments), values parse as JSON when possible else stay strings.
+  The bare `<PREFIX>` var itself is not an override. Feed the
+  result to `apply_overrides` as the highest-precedence layer —
+  the generic env-overlay half config ports compose on top of
+  file discovery
 
 ## Resolution order
 
