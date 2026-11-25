@@ -84,9 +84,14 @@ child-wins/default composition produces.
 ## What tamias owns vs. what scarab owns
 
 - **scarab-template** owns this vocabulary (`Extends`, `ParentDecl`,
-  `MergeRules`) and the evaluation contract (`compose_chain`,
-  `apply_into_policy`, `PackLoader`/`ParentLocator` ports). It never
-  fetches, never parses a `source` grammar.
+  `MergeRules`), the declaration parse (`parse_extends` — the
+  `template.extends` grammar over a raw manifest `Value`), the
+  `.scarab-parent`/`.scarab-parents` layout constants
+  (`PARENT_DIR`/`PARENTS_DIR`), and the evaluation contract
+  (`compose_chain`, `apply_into_policy`,
+  `PackLoader`/`ParentLocator` ports). It never fetches, never
+  parses a `source` grammar, never validates a `via` scheme —
+  scheme allowlists are the resolver's.
 - **tamias-install** owns `tamias-ref` *resolution*: store name →
   stored payload; anything else the ref grammar claims → recursive
   install. It materializes resolved parents into the child payload

@@ -5,7 +5,7 @@ api:
 - name: ChainEntry
   kind: type
   file: crates/scarab-template/src/compose.rs
-  line: 174
+  line: 185
   module: scarab-template
 - name: DEFAULT_MAX_DEPTH
   kind: const
@@ -15,27 +15,37 @@ api:
 - name: Extends
   kind: type
   file: crates/scarab-template/src/compose.rs
-  line: 52
+  line: 63
   module: scarab-template
 - name: IntoMerge
   kind: type
   file: crates/scarab-template/src/compose.rs
-  line: 159
+  line: 170
   module: scarab-template
 - name: Mem
   kind: type
   file: crates/scarab-template/src/compose.rs
-  line: 455
+  line: 554
   module: scarab-template
 - name: MergeRules
   kind: type
   file: crates/scarab-template/src/compose.rs
-  line: 133
+  line: 144
+  module: scarab-template
+- name: PARENTS_DIR
+  kind: const
+  file: crates/scarab-template/src/compose.rs
+  line: 47
+  module: scarab-template
+- name: PARENT_DIR
+  kind: const
+  file: crates/scarab-template/src/compose.rs
+  line: 42
   module: scarab-template
 - name: PackLoader
   kind: trait
   file: crates/scarab-template/src/compose.rs
-  line: 186
+  line: 197
   module: scarab-template
 - name: PackTemplate
   kind: type
@@ -45,17 +55,17 @@ api:
 - name: ParentDecl
   kind: type
   file: crates/scarab-template/src/compose.rs
-  line: 82
+  line: 93
   module: scarab-template
 - name: ParentLocator
   kind: trait
   file: crates/scarab-template/src/compose.rs
-  line: 206
+  line: 217
   module: scarab-template
 - name: ParentSpec
   kind: type
   file: crates/scarab-template/src/compose.rs
-  line: 111
+  line: 122
   module: scarab-template
 - name: TemplateEngine
   kind: trait
@@ -75,17 +85,17 @@ api:
 - name: VarsMerge
   kind: type
   file: crates/scarab-template/src/compose.rs
-  line: 147
+  line: 158
   module: scarab-template
 - name: apply_into_policy
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 351
+  line: 404
   module: scarab-template
 - name: apply_into_policy_child_and_parent_wins
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 555
+  line: 654
   module: scarab-template
 - name: compose
   kind: module
@@ -95,47 +105,47 @@ api:
 - name: compose_chain
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 244
+  line: 297
   module: scarab-template
 - name: compose_chain_errors_on_parent_count_mismatch
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 522
+  line: 621
   module: scarab-template
 - name: compose_chain_honors_vendored_parents_without_extends
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 540
+  line: 639
   module: scarab-template
 - name: compose_chain_orders_ancestors_first_and_dedups_diamonds
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 498
+  line: 597
   module: scarab-template
 - name: compose_chain_rejects_zero_max_depth
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 587
+  line: 686
   module: scarab-template
 - name: extends_string_and_table_and_list_parse
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 419
+  line: 472
   module: scarab-template
 - name: load
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 463
+  line: 562
   module: scarab-template
 - name: locate
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 475
+  line: 574
   module: scarab-template
 - name: mem_pack
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 488
+  line: 587
   module: scarab-template
 - name: merge_context
   kind: function
@@ -145,22 +155,37 @@ api:
 - name: merge_rules_parse_kebab_case
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 443
+  line: 542
   module: scarab-template
 - name: normalize
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 391
+  line: 444
   module: scarab-template
 - name: pack
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 414
+  line: 467
   module: scarab-template
 - name: parents
   kind: function
   file: crates/scarab-template/src/compose.rs
-  line: 64
+  line: 75
+  module: scarab-template
+- name: parse_extends
+  kind: function
+  file: crates/scarab-template/src/compose.rs
+  line: 249
+  module: scarab-template
+- name: parse_extends_reads_manifest_value
+  kind: function
+  file: crates/scarab-template/src/compose.rs
+  line: 496
+  module: scarab-template
+- name: parse_extends_rejects_malformed
+  kind: function
+  file: crates/scarab-template/src/compose.rs
+  line: 528
   module: scarab-template
 - name: safe_into
   kind: function
@@ -177,31 +202,7 @@ api:
   file: crates/scarab-template/Cargo.toml
   line: 1
   module: scarab-template
-- name: source
-  kind: function
-  file: crates/scarab-template/src/compose.rs
-  line: 92
-  module: scarab-template
-- name: sources
-  kind: function
-  file: crates/scarab-template/src/compose.rs
-  line: 73
-  module: scarab-template
-- name: tests
-  kind: module
-  file: crates/scarab-template/src/compose.rs
-  line: 407
-  module: scarab-template
-- name: via
-  kind: function
-  file: crates/scarab-template/src/compose.rs
-  line: 101
-  module: scarab-template
-- name: walk
-  kind: function
-  file: crates/scarab-template/src/compose.rs
-  line: 270
-  module: scarab-template
+api_omitted: 5
 deps:
 - serde
 - serde_json
@@ -221,8 +222,8 @@ provenance:
   - crates/scarab-template/src/lib.rs
   hashes:
   - def924c3e37872a52bc4f9fcd4f7e2295931235a
-  - ee015ac2e6f58e0b8da08785b3d386f1c13c9316
-  - ec1c77cf73132b7c112c17a9d9f63098252c101a
-  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
-  generated_at: '1795485135'
+  - 00a47844dfffdf0a1968478836d0ff95e5e71157
+  - e2bb8c22bdcb3baaa6171cfa29294b87772c76db
+  commit_sha: 23b6d45da9803d737ed951300542fa837d6e7347
+  generated_at: '1795569502'
   generator: kuda-template/0.1.4

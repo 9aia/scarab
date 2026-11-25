@@ -5,137 +5,127 @@ api:
 - name: Args
   kind: type
   file: crates/tamias-driver-template/src/lib.rs
-  line: 100
+  line: 101
   module: tamias-driver-template
 - name: DriverLoader
   kind: type
   file: crates/tamias-driver-template/src/lib.rs
-  line: 240
+  line: 233
   module: tamias-driver-template
 - name: MaterializedLocator
   kind: type
   file: crates/tamias-driver-template/src/lib.rs
-  line: 198
+  line: 191
   module: tamias-driver-template
 - name: OpsError
   kind: type
   file: crates/tamias-driver-template/src/lib.rs
-  line: 78
-  module: tamias-driver-template
-- name: PARENTS_DIR
-  kind: const
-  file: crates/tamias-driver-template/src/lib.rs
-  line: 190
-  module: tamias-driver-template
-- name: PARENT_DIR
-  kind: const
-  file: crates/tamias-driver-template/src/lib.rs
-  line: 187
+  line: 79
   module: tamias-driver-template
 - name: Result
   kind: type
   file: crates/tamias-driver-template/src/lib.rs
-  line: 91
+  line: 92
   module: tamias-driver-template
 - name: STATE_FILE
   kind: const
   file: crates/tamias-driver-template/src/lib.rs
-  line: 73
+  line: 74
   module: tamias-driver-template
 - name: State
   kind: type
   file: crates/tamias-driver-template/src/lib.rs
-  line: 64
+  line: 65
   module: tamias-driver-template
 - name: add_merge
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 831
+  line: 824
   module: tamias-driver-template
 - name: args_beat_pack_vars_across_chain
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 957
+  line: 950
   module: tamias-driver-template
 - name: auto_vars
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 281
+  line: 274
   module: tamias-driver-template
 - name: capabilities
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 625
+  line: 618
   module: tamias-driver-template
 - name: chain_fixture
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 741
+  line: 734
   module: tamias-driver-template
 - name: config_schema
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 615
+  line: 608
   module: tamias-driver-template
 - name: config_schema_is_valid_json
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 718
+  line: 711
   module: tamias-driver-template
 - name: copy_dir_all
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 788
+  line: 781
   module: tamias-driver-template
 - name: deploy
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 484
+  line: 477
   module: tamias-driver-template
 - name: deploy_renders_ancestors_first_child_wins
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 921
+  line: 914
   module: tamias-driver-template
 - name: err
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 93
+  line: 94
   module: tamias-driver-template
 - name: extends_without_materialized_parent_errors
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 815
+  line: 808
   module: tamias-driver-template
 - name: install
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 452
+  line: 445
   module: tamias-driver-template
 - name: load
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 243
+  line: 236
   module: tamias-driver-template
 - name: load_chain
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 257
+  line: 250
   module: tamias-driver-template
 - name: load_chain_orders_ancestors_first
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 802
+  line: 795
   module: tamias-driver-template
 - name: load_pack
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 145
+  line: 146
   module: tamias-driver-template
 - name: locate
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 201
+  line: 194
   module: tamias-driver-template
 - name: main
   kind: function
@@ -145,64 +135,74 @@ api:
 - name: merge_into_error_fails_on_conflict
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 886
+  line: 879
   module: tamias-driver-template
 - name: merge_rules
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 274
+  line: 267
   module: tamias-driver-template
 - name: merge_vars_parent_wins_inverts_var_defaults
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 899
+  line: 892
   module: tamias-driver-template
 - name: multi_parent_layout_renders_in_declaration_order
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 843
+  line: 836
   module: tamias-driver-template
 - name: parse_args
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 110
+  line: 111
   module: tamias-driver-template
 - name: parse_args_pairs_and_flags
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 693
+  line: 686
   module: tamias-driver-template
 - name: read_state
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 541
+  line: 534
   module: tamias-driver-template
 - name: render_chain
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 422
+  line: 415
   module: tamias-driver-template
 - name: render_pack
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 398
+  line: 391
   module: tamias-driver-template
 - name: required_dir
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 634
+  line: 627
   module: tamias-driver-template
 - name: resolve_vars
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 326
+  line: 319
   module: tamias-driver-template
 - name: run
   kind: function
   file: crates/tamias-driver-template/src/lib.rs
-  line: 639
+  line: 632
   module: tamias-driver-template
-api_omitted: 9
+- name: safe_into_rejects_escapes
+  kind: function
+  file: crates/tamias-driver-template/src/lib.rs
+  line: 671
+  module: tamias-driver-template
+- name: safe_src_rejects_escapes
+  kind: function
+  file: crates/tamias-driver-template/src/lib.rs
+  line: 680
+  module: tamias-driver-template
+api_omitted: 7
 deps:
 - scarab-config
 - scarab-template
@@ -230,8 +230,8 @@ provenance:
   - crates/tamias-driver-template/src/main.rs
   hashes:
   - 41e161330eec7727f9923c13cb58911c4509c3dc
-  - a4c4640a28087e3ca9c7c65f1d80ff2ea7d3c776
+  - 580e8cc7537e91044f1ab982cdc2052e612af0bd
   - 965ef673e993b6f51eea3cfe975c18c43072dd3a
-  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
-  generated_at: '1795485135'
+  commit_sha: 23b6d45da9803d737ed951300542fa837d6e7347
+  generated_at: '1795569502'
   generator: kuda-template/0.1.4

@@ -50,7 +50,8 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use scarab_template::compose::{
-    ChainEntry, Extends, MergeRules, ParentLocator, VarsMerge, apply_into_policy, compose_chain,
+    ChainEntry, Extends, MergeRules, PARENT_DIR, PARENTS_DIR, ParentLocator, VarsMerge,
+    apply_into_policy, compose_chain,
 };
 use scarab_template::{
     PackTemplate, TemplateEngine, TemplateError, merge_context, safe_into, safe_src,
@@ -180,14 +181,6 @@ fn load_pack(dir: &Path) -> Result<(PackTemplate, String)> {
     }
     Ok((pack, name))
 }
-
-/// Payload subdir tamias materializes a single resolved
-/// `template.extends` parent into — and where this driver looks for
-/// it (the multi-parent layout is [`PARENTS_DIR`]).
-const PARENT_DIR: &str = ".scarab-parent";
-/// Payload subdir tamias materializes several `extends` parents into
-/// — one numbered child per declaration, in order.
-const PARENTS_DIR: &str = ".scarab-parents";
 
 /// The driver's [`ParentLocator`]: discovers parents already
 /// materialized inside the payload by tamias install —

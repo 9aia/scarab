@@ -229,10 +229,10 @@ provenance:
   - crates/scarab-config-file/src/lib.rs
   - crates/scarab-config-file/tests/dogfood.rs
   hashes:
-  - 0209f8d82b3c3f64b4c4766661279ca78b2247f9
+  - 0a7c02d41429584f0b4b21c9fd04157b9a0df96d
   - e74595fc5c4f54ac4e68cd401852fde5c2744d78
   - 56e57e3de251469902608897fd2ac6fb50e5653b
   - 7f65f0c751811501392ac3881131ba563b04e82c
-  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
-  generated_at: '1795485135'
+  commit_sha: 23b6d45da9803d737ed951300542fa837d6e7347
+  generated_at: '1795566145'
   generator: kuda-template/0.1.4

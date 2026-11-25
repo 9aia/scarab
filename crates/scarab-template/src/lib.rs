@@ -44,8 +44,8 @@ use serde::{Deserialize, Serialize};
 pub mod compose;
 
 pub use compose::{
-    ChainEntry, Extends, IntoMerge, MergeRules, PackLoader, ParentDecl, ParentLocator, ParentSpec,
-    VarsMerge, apply_into_policy, compose_chain,
+    ChainEntry, Extends, IntoMerge, MergeRules, PARENT_DIR, PARENTS_DIR, PackLoader, ParentDecl,
+    ParentLocator, ParentSpec, VarsMerge, apply_into_policy, compose_chain, parse_extends,
 };
 
 /// One template file in a pack — `src` inside the payload,

@@ -20,8 +20,8 @@ modules:
 commands:
 - cargo check
 - cargo test --workspace
-tree_digest: 2a3d64331c06811dcf045a8f7164f758c8906ced
-files_total: 81
+tree_digest: 050e0d7c9c2b7a4092fddc31724d36929fb626f5
+files_total: 82
 provenance:
   files:
   - Cargo.toml
@@ -38,11 +38,11 @@ provenance:
   - crates/tamias-driver-template/Cargo.toml
   - xtask/Cargo.toml
   hashes:
-  - 35ed127318cbc427955abe99d0d7c050e317b627
+  - d6169c4ee8bcac2ba8b7cc17a2a590415aff5fe6
   - 97ea0adbd91b9d37fbcd086254d8b4d9b22f5952
   - 8f47828762eb3dbb524fbeee835a6d7e85288317
-  - 232540f93386359880cfdd9f8e7826889b64c868
-  - 0209f8d82b3c3f64b4c4766661279ca78b2247f9
+  - ff6cc8faeef8d490ce96bf62b799dd78714f91a0
+  - 0a7c02d41429584f0b4b21c9fd04157b9a0df96d
   - c34b253e83982e72d9d9742a8b51e8f3706d7b32
   - 9995b5cd553f7b3822d2d6f2aff0f535806c55d9
   - def924c3e37872a52bc4f9fcd4f7e2295931235a
@@ -51,6 +51,6 @@ provenance:
   - f5c47c853c5ab58d7567c821b649d0bf127f1db9
   - 41e161330eec7727f9923c13cb58911c4509c3dc
   - 99cc878dd7579834fbd895da3f0cd86bb928ec22
-  commit_sha: 199410d12c5e628ef9bac41e7ee88b501a22b1b0
-  generated_at: '1795485135'
+  commit_sha: 23b6d45da9803d737ed951300542fa837d6e7347
+  generated_at: '1795569502'
   generator: kuda/0.1.0

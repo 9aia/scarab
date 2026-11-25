@@ -35,6 +35,17 @@ use crate::{PackTemplate, TemplateError};
 /// same bound tamias applies to `extends` recursion at install time.
 pub const DEFAULT_MAX_DEPTH: usize = 8;
 
+/// Payload subdir a single resolved `extends` parent materializes
+/// into — the install-side layout convention (`.scarab-parent/`).
+/// Installers write it, [`ParentLocator`] impls discover it; both
+/// sides share this spelling so the convention can't drift.
+pub const PARENT_DIR: &str = ".scarab-parent";
+
+/// Payload subdir several resolved `extends` parents materialize
+/// into — one numbered child (`<index>/`) per declaration, in
+/// declaration order (lowest precedence first).
+pub const PARENTS_DIR: &str = ".scarab-parents";
+
 /// `template.extends` — the pack's declared parents.
 ///
 /// Accepts three manifest spellings (all normalize to an ordered
@@ -216,6 +227,48 @@ pub trait ParentLocator {
         payload: &Path,
         extends: Option<&Extends>,
     ) -> Result<Vec<PathBuf>, TemplateError>;
+}
+
+/// Parse the `extends` declaration out of a raw pack manifest —
+/// the JSON-shaped document YAML/TOML loaders normalize to upstream.
+/// Reads `template.extends` and returns the ordered [`ParentDecl`]
+/// list (lowest precedence first); absent or `null` → empty.
+///
+/// This is the declaration-grammar half of [`PackTemplate`]'s
+/// `extends` field, exposed for consumers that hold the manifest
+/// as an *untyped* document — they can't route the whole
+/// `template:` table through `PackTemplate` without owning every
+/// key it may carry. It validates shape only (item is a string or
+/// `{source, via}` map, `source` non-empty, `via` a string, the
+/// list non-empty) — never the scheme: an unknown `via` parses
+/// fine here and fails at resolution, where the resolver's
+/// allowlist lives.
+///
+/// # Errors
+/// [`TemplateError::Compose`] on a malformed declaration.
+pub fn parse_extends(manifest: &serde_json::Value) -> Result<Vec<ParentDecl>, TemplateError> {
+    let Some(extends) = manifest.get("template").and_then(|t| t.get("extends")) else {
+        return Ok(Vec::new());
+    };
+    if extends.is_null() {
+        return Ok(Vec::new());
+    }
+    if matches!(extends, serde_json::Value::Array(items) if items.is_empty()) {
+        return Err(TemplateError::Compose(
+            "template.extends is an empty list — name at least one parent".to_string(),
+        ));
+    }
+    let parsed: Extends = serde_json::from_value(extends.clone())
+        .map_err(|e| TemplateError::Compose(format!("template.extends: {e}")))?;
+    let decls = parsed.parents().to_vec();
+    for d in &decls {
+        if d.source().trim().is_empty() {
+            return Err(TemplateError::Compose(
+                "template.extends parent has an empty source".to_string(),
+            ));
+        }
+    }
+    Ok(decls)
 }
 
 /// Walk the `extends` chain from `root` and return every pack
@@ -437,6 +490,52 @@ mod tests {
         assert_eq!(p.merge.vars, VarsMerge::ChildWins);
         assert_eq!(p.merge.into, IntoMerge::ChildWins);
         assert_eq!(p.merge.max_depth, None);
+    }
+
+    #[test]
+    fn parse_extends_reads_manifest_value() {
+        // absent / null / no template table → empty
+        for v in [
+            json!({}),
+            json!({"template": {}}),
+            json!({"template": {"extends": null}}),
+            json!({"template": null}),
+            json!("not-a-map"),
+        ] {
+            assert_eq!(parse_extends(&v).unwrap(), Vec::new(), "{v}");
+        }
+        // string / table / list spellings
+        let d = parse_extends(&json!({"template": {"extends": "git:org/base"}})).unwrap();
+        assert_eq!(d.len(), 1);
+        assert_eq!(d[0].source(), "git:org/base");
+        assert_eq!(d[0].via(), None);
+
+        let d = parse_extends(
+            &json!({"template": {"extends": {"source": "git:o/b", "via": "handl-kit"}}}),
+        )
+        .unwrap();
+        assert_eq!(d[0].via(), Some("handl-kit")); // scheme validity is the resolver's job
+
+        let d = parse_extends(&json!({"template": {"extends": ["git:a", {"source": "git:b"}]}}))
+            .unwrap();
+        assert_eq!(
+            d.iter().map(ParentDecl::source).collect::<Vec<_>>(),
+            ["git:a", "git:b"]
+        );
+    }
+
+    #[test]
+    fn parse_extends_rejects_malformed() {
+        for v in [
+            json!({"template": {"extends": 42}}),
+            json!({"template": {"extends": []}}),
+            json!({"template": {"extends": "  "}}),
+            json!({"template": {"extends": ["a", 42]}}),
+            json!({"template": {"extends": {"via": "tamias-ref"}}}), // no source
+            json!({"template": {"extends": {"source": "x", "via": 7}}}),
+        ] {
+            assert!(parse_extends(&v).is_err(), "{v}");
+        }
     }
 
     #[test]

@@ -194,9 +194,9 @@ provenance:
   - crates/scarab-config/src/lib.rs
   - crates/scarab-config/src/merge.rs
   hashes:
-  - 232540f93386359880cfdd9f8e7826889b64c868
+  - ff6cc8faeef8d490ce96bf62b799dd78714f91a0
   - 76932634cb4b3583710ba97d5c98072f74456970
   - 37fae855cbe52a28a1bf36d5161b5e2e1e7131ce
-  commit_sha: 85e50d57110b2f785a5c11d8cf55de7737d67257
-  generated_at: '1795494225'
+  commit_sha: 23b6d45da9803d737ed951300542fa837d6e7347
+  generated_at: '1795566145'
   generator: kuda-template/0.1.4
